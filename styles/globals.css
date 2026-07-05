@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;510;600;700&family=Dancing+Script:wght@600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Open Design: Color Palette ────────────────────────── */
+    --accent:        #2F6FEB;
+    --accent-hover:  #1D5BD8;
+    --accent-light:  #EEF3FF;
+    --accent-subtle: #D6E4FF;
+
+    --bg:            #FAFAFA;
+    --surface:       #FFFFFF;
+    --surface-hover: #F5F5F5;
+    --fg:            #111111;
+    --fg-secondary:  #525252;
+    --fg-muted:      #8C8C8C;
+
+    --border:        #E5E5E5;
+    --border-light:  #F0F0F0;
+
+    --success:       #16A34A;
+    --success-light: #DCFCE7;
+    --warn:          #D97706;
+    --warn-light:    #FEF3C7;
+    --danger:        #DC2626;
+    --danger-light:  #FEE2E2;
+    --purple:        #7C3AED;
+    --purple-light:  #EDE9FE;
+
+    /* ── Open Design: Typography Scale (1.25 ratio) ──────────── */
+    --font-display:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-body:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-cursive:  'Dancing Script', cursive;
+
+    --text-display:  48px;
+    --text-h1:       32px;
+    --text-h2:       24px;
+    --text-h3:       20px;
+    --text-body:     15px;
+    --text-small:    13px;
+    --text-caption:  11px;
+
+    /* ── Open Design: Spacing Scale (8px base) ───────────────── */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+    --space-20: 80px;
+
+    /* ── Open Design: Elevation (border-only depth) ──────────── */
+    --radius-sm:  6px;
+    --radius-md:  8px;
+    --radius-lg:  12px;
+    --radius-xl:  16px;
+
+    /* ── Open Design: Layout ──────────────────────────────────── */
+    --max-width: 1200px;
+    --sidebar-width: 240px;
+  }
+
+  /* Dark mode — future-proof */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:            #0f0f0f;
+      --surface:       #1a1a1a;
+      --surface-hover: #222222;
+      --fg:            #f0f0f0;
+      --fg-secondary:  #a0a0a0;
+      --fg-muted:      #666666;
+      --border:        rgba(255,255,255,0.08);
+      --border-light:  rgba(255,255,255,0.04);
+    }
+  }
+}
+
+@layer utilities {
+  /* ALL CAPS requires letter-spacing */
+  .caps-tight {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Display text requires negative tracking */
+  .display-tight {
+    letter-spacing: -0.02em;
+  }
+
+  .display-loose {
+    letter-spacing: -0.01em;
+  }
+
+  /* Surface hierarchy */
+  .surface {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .surface-raised {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .surface-subtle {
+    background: var(--surface-hover);
+  }
+
+  /* Typography utilities */
+  .text-accent {
+    color: var(--accent);
+  }
+
+  .bg-accent {
+    background: var(--accent);
+  }
+
+  .bg-accent-light {
+    background: var(--accent-light);
+  }
+
+  .border-accent {
+    border-color: var(--accent);
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+
+/* Signature font */
+.sig-cursive {
+  font-family: 'Dancing Script', cursive;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Touch targets — minimum 44×44px for PWA */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Print styles — only receipt content */
+@media print {
+  nav, aside, header, .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: white; }
+}
+
+/* PWA safe area */
+@supports (padding: max(0px)) {
+  .sidebar {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Page transition */
+.page-enter {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Chrome autofill override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+}

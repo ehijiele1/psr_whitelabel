@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(timeout 10 /dev/null)",
+      "PowerShell(Start-Process \"http://localhost:3000\")",
+      "Bash(npm -v)",
+      "Bash(npm run *)",
+      "Bash(tee dev.log)",
+      "Bash(curl *)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}

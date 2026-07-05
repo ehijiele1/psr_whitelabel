@@ -1,0 +1,28 @@
+
+> princesteve-residence@1.0.0 dev
+> next dev
+
+   ▲ Next.js 15.5.19
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.96.1:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 13.6s
+ ○ Compiling /apply ...
+ ✓ Compiled /apply in 11.6s (659 modules)
+ GET /apply 200 in 12989ms
+ ✓ Compiled in 1690ms (289 modules)
+ ✓ Compiled in 233ms (275 modules)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 9.8s (654 modules)
+ GET /login 200 in 10591ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.2s (731 modules)
+ GET / 307 in 3199ms
+ GET /login 200 in 270ms
+ ○ Compiling /dashboard/landlord ...
+ ✓ Compiled /dashboard/landlord in 1142ms (741 modules)
+ GET /dashboard/landlord 307 in 1758ms

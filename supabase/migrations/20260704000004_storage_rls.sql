@@ -1,0 +1,25 @@
+-- PrinceSteve Residence Migration 04: Storage RLS
+DROP POLICY IF EXISTS documents_landlord_all ON storage.objects;
+DROP POLICY IF EXISTS documents_tenant_insert ON storage.objects;
+DROP POLICY IF EXISTS documents_tenant_select ON storage.objects;
+DROP POLICY IF EXISTS documents_landlord_all ON storage.objects;
+CREATE POLICY documents_landlord_all ON storage.objects FOR ALL USING (bucket_id = 'documents' AND EXISTS (SELECT 1 FROM profiles p WHERE p.user_id = auth.uid() AND p.role = 'landlord'));
+DROP POLICY IF EXISTS documents_tenant_insert ON storage.objects;
+CREATE POLICY documents_tenant_insert ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'documents' AND auth.role() = 'authenticated');
+DROP POLICY IF EXISTS documents_tenant_select ON storage.objects;
+CREATE POLICY documents_tenant_select ON storage.objects FOR SELECT USING (bucket_id = 'documents' AND auth.role() = 'authenticated');
+DROP POLICY IF EXISTS photos_landlord_all ON storage.objects;
+DROP POLICY IF EXISTS photos_auth_insert_select ON storage.objects;
+DROP POLICY IF EXISTS photos_auth_select ON storage.objects;
+DROP POLICY IF EXISTS photos_landlord_all ON storage.objects;
+CREATE POLICY photos_landlord_all ON storage.objects FOR ALL USING (bucket_id = 'photos' AND EXISTS (SELECT 1 FROM profiles p WHERE p.user_id = auth.uid() AND p.role = 'landlord'));
+DROP POLICY IF EXISTS photos_auth_insert_select ON storage.objects;
+CREATE POLICY photos_auth_insert_select ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'photos' AND auth.role() = 'authenticated');
+DROP POLICY IF EXISTS photos_auth_select ON storage.objects;
+CREATE POLICY photos_auth_select ON storage.objects FOR SELECT USING (bucket_id = 'photos' AND auth.role() = 'authenticated');
+DROP POLICY IF EXISTS agreements_landlord_all ON storage.objects;
+DROP POLICY IF EXISTS agreements_tenant_select ON storage.objects;
+DROP POLICY IF EXISTS agreements_landlord_all ON storage.objects;
+CREATE POLICY agreements_landlord_all ON storage.objects FOR ALL USING (bucket_id = 'agreements' AND EXISTS (SELECT 1 FROM profiles p WHERE p.user_id = auth.uid() AND p.role = 'landlord'));
+DROP POLICY IF EXISTS agreements_tenant_select ON storage.objects;
+CREATE POLICY agreements_tenant_select ON storage.objects FOR SELECT USING (bucket_id = 'agreements' AND auth.role() = 'authenticated');
