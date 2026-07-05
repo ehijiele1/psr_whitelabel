@@ -3,7 +3,7 @@ export const Button: React.FC<{
   loading?: boolean;
   label: string;
   icon?: string;
-  color?: 'blue' | 'paystack' | 'green' | 'amber';
+  color?: 'blue' | 'paystack' | 'green' | 'amber' | 'red';
   className?: string;
 }> = ({
   onClick,
@@ -17,7 +17,8 @@ export const Button: React.FC<{
     blue: 'bg-blue-600 hover:bg-blue-700',
     paystack: 'bg-[#00C3F7] hover:bg-[#00A8D8]',
     green: 'bg-green-600 hover:bg-green-700',
-    amber: 'bg-amber-600 hover:bg-amber-700'
+    amber: 'bg-amber-600 hover:bg-amber-700',
+    red: 'bg-red-600 hover:bg-red-700'
   }[color];
 
   return (

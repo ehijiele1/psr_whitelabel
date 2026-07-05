@@ -303,6 +303,19 @@ export interface FileDoc {
   applicant_id?: string;
 }
 
+// ── Properties ────────────────────────────────────────────────────
+export interface Property {
+  id: string;
+  name: string;
+  address: string;
+  description?: string;
+  landlord_id: string;
+  status: 'active' | 'inactive' | 'maintenance';
+  emergency_contact?: string;
+  caretaker_contact?: string;
+  created_at: string;
+}
+
 // ── Settings ─────────────────────────────────────────────────────
 export interface PropertySettings {
   property_name: string;
@@ -321,29 +334,33 @@ export interface PropertySettings {
 }
 
 // ── Supabase DB Types ─────────────────────────────────────────────
+type PSRTable<T> = { Row: T; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: []; };
+
 export type Database = {
   public: {
     Tables: {
-      profiles: { Row: Profile };
-      properties: { Row: Property };
-      tenants: { Row: Tenant };
-      units: { Row: Unit };
-      payments: { Row: Payment };
-      tickets: { Row: Ticket };
-      applicants: { Row: Applicant };
-      inbox: { Row: InboxMessage };
-      activity: { Row: ActivityItem };
-      settings: { Row: PropertySettings };
-      agreements: { Row: Agreement };
-      notices: { Row: Notice };
-      invitations: { Row: Invitation };
-      files: { Row: FileDoc };
-      bills: { Row: Bill };
-      notifications: { Row: AppNotification };
-      notification_preferences: { Row: NotificationPreference };
-      audit_logs: { Row: AuditLogEntry };
-      email_queue: { Row: EmailQueueItem };
+      profiles: PSRTable<Profile>;
+      properties: PSRTable<Property>;
+      tenants: PSRTable<Tenant>;
+      units: PSRTable<Unit>;
+      payments: PSRTable<Payment>;
+      tickets: PSRTable<Ticket>;
+      applicants: PSRTable<Applicant>;
+      inbox: PSRTable<InboxMessage>;
+      activity: PSRTable<ActivityItem>;
+      settings: PSRTable<PropertySettings>;
+      agreements: PSRTable<Agreement>;
+      notices: PSRTable<Notice>;
+      invitations: PSRTable<Invitation>;
+      files: PSRTable<FileDoc>;
+      bills: PSRTable<Bill>;
+      notifications: PSRTable<AppNotification>;
+      notification_preferences: PSRTable<NotificationPreference>;
+      audit_logs: PSRTable<AuditLogEntry>;
+      email_queue: PSRTable<EmailQueueItem>;
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
   };
 };
 

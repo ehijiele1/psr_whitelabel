@@ -18,11 +18,13 @@ export interface ReceiptTemplateProps {
     email: string;
     account_name: string;
   };
+  mode?: 'screen' | 'print';
 }
 
 export const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({
   payment,
-  settings
+  settings,
+  mode = 'screen'
 }) => {
   const amountInWords = numberToWords(payment.amount);
 

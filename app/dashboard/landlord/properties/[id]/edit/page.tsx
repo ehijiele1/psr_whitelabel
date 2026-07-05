@@ -117,21 +117,21 @@ export default function EditPropertyPage() {
         )}
         <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Property name *" value={form.name} onChange={v => setForm(p => ({ ...p, name: v }))} />
-            <Field label="Status" value={form.status} onChange={v => setForm(p => ({ ...p, status: v }))} type="select" />
+            <Field label="Property name *" value={form.name} onChange={(v: string) => setForm(p => ({ ...p, name: v }))} />
+            <Field label="Status" value={form.status} onChange={(v: string) => setForm(p => ({ ...p, status: v as 'active' | 'inactive' | 'maintenance' }))} type="select" />
           </div>
-          <Field label="Address *" value={form.address} onChange={v => setForm(p => ({ ...p, address: v }))} />
-          <Field label="Description" value={form.description} onChange={v => setForm(p => ({ ...p, description: v }))} type="textarea" />
+          <Field label="Address *" value={form.address} onChange={(v: string) => setForm(p => ({ ...p, address: v }))} />
+          <Field label="Description" value={form.description} onChange={(v: string) => setForm(p => ({ ...p, description: v }))} type="textarea" />
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Emergency contact" value={form.emergency_contact} onChange={v => setForm(p => ({ ...p, emergency_contact: v }))} />
-            <Field label="Caretaker contact" value={form.caretaker_contact} onChange={v => setForm(p => ({ ...p, caretaker_contact: v }))} />
+            <Field label="Emergency contact" value={form.emergency_contact} onChange={(v: string) => setForm(p => ({ ...p, emergency_contact: v }))} />
+            <Field label="Caretaker contact" value={form.caretaker_contact} onChange={(v: string) => setForm(p => ({ ...p, caretaker_contact: v }))} />
           </div>
           <div className="border-t border-slate-100 pt-4">
             <h3 className="text-[12px] font-semibold text-slate-700 mb-3">Bank details</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Bank name" value={form.bank_name} onChange={v => setForm(p => ({ ...p, bank_name: v }))} />
-              <Field label="Account number" value={form.account_number} onChange={v => setForm(p => ({ ...p, account_number: v }))} />
-              <Field label="Account name" value={form.account_name} onChange={v => setForm(p => ({ ...p, account_name: v }))} className="col-span-2" />
+              <Field label="Bank name" value={form.bank_name} onChange={(v: string) => setForm(p => ({ ...p, bank_name: v }))} />
+              <Field label="Account number" value={form.account_number} onChange={(v: string) => setForm(p => ({ ...p, account_number: v }))} />
+              <Field label="Account name" value={form.account_name} onChange={(v: string) => setForm(p => ({ ...p, account_name: v }))} className="col-span-2" />
             </div>
           </div>
           <div className="flex gap-3">

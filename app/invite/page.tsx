@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-export default function InvitePage() {
+function InviteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -73,5 +73,20 @@ export default function InvitePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function InvitePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="text-center">
+          <i className="ti ti-loader animate-spin text-5xl block mb-4" style={{ color: 'var(--accent)' }} />
+          <p className="text-[13px]" style={{ color: 'var(--fg-muted)' }}>Loading...</p>
+        </div>
+      </div>
+    }>
+      <InviteContent />
+    </Suspense>
   );
 }

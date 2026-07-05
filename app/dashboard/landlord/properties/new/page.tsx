@@ -79,17 +79,17 @@ export default function NewPropertyPage() {
           </div>
         )}
         <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-          <Field label="Property name *" value={form.name} onChange={v => setForm(p => ({ ...p, name: v }))} placeholder="e.g. PrinceSteve Residence Phase 2" />
-          <Field label="Address *" value={form.address} onChange={v => setForm(p => ({ ...p, address: v }))} placeholder="Full property address" />
-          <Field label="Description" value={form.description} onChange={v => setForm(p => ({ ...p, description: v }))} type="textarea" placeholder="Optional description" />
-          <Field label="Emergency contact" value={form.emergency_contact} onChange={v => setForm(p => ({ ...p, emergency_contact: v }))} placeholder="+234xxxxxxxxx" />
-          <Field label="Caretaker contact" value={form.caretaker_contact} onChange={v => setForm(p => ({ ...p, caretaker_contact: v }))} placeholder="+234xxxxxxxxx" />
+          <Field label="Property name *" value={form.name} onChange={(v: string) => setForm(p => ({ ...p, name: v }))} placeholder="e.g. PrinceSteve Residence Phase 2" />
+          <Field label="Address *" value={form.address} onChange={(v: string) => setForm(p => ({ ...p, address: v }))} placeholder="Full property address" />
+          <Field label="Description" value={form.description} onChange={(v: string) => setForm(p => ({ ...p, description: v }))} type="textarea" placeholder="Optional description" />
+          <Field label="Emergency contact" value={form.emergency_contact} onChange={(v: string) => setForm(p => ({ ...p, emergency_contact: v }))} placeholder="+234xxxxxxxxx" />
+          <Field label="Caretaker contact" value={form.caretaker_contact} onChange={(v: string) => setForm(p => ({ ...p, caretaker_contact: v }))} placeholder="+234xxxxxxxxx" />
           <div className="border-t border-slate-100 pt-4">
             <h3 className="text-[12px] font-semibold text-slate-700 mb-3">Bank details</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Bank name" value={form.bank_name} onChange={v => setForm(p => ({ ...p, bank_name: v }))} />
-              <Field label="Account number" value={form.account_number} onChange={v => setForm(p => ({ ...p, account_number: v }))} placeholder="e.g. 3012345678" />
-              <Field label="Account name" value={form.account_name} onChange={v => setForm(p => ({ ...p, account_name: v }))} placeholder="e.g. Prince Steve Residence" className="col-span-2" />
+              <Field label="Bank name" value={form.bank_name} onChange={(v: string) => setForm(p => ({ ...p, bank_name: v }))} />
+              <Field label="Account number" value={form.account_number} onChange={(v: string) => setForm(p => ({ ...p, account_number: v }))} placeholder="e.g. 3012345678" />
+              <Field label="Account name" value={form.account_name} onChange={(v: string) => setForm(p => ({ ...p, account_name: v }))} placeholder="e.g. Prince Steve Residence" className="col-span-2" />
             </div>
           </div>
           <button type="submit" disabled={loading}

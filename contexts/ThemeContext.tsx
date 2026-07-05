@@ -23,7 +23,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'professional' ? 'premium' : 'professional');
+    setThemeState(prev => prev === 'professional' ? 'premium' : 'professional');
   };
 
   const setTheme = (newTheme: Theme) => {

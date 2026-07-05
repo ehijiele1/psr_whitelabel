@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function createAdminServerClient() {
@@ -10,34 +10,24 @@ export async function createAdminServerClient() {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured');
   }
 
-  return createServerComponentClient({
-    cookies: () => cookieStore,
-  }, {
+  return createServerClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: {
-      storage: {
-        getItem: (key: string) => cookieStore.get(key)?.value,
-        setItem: (key: string, value: string) => {
-          cookieStore.set({
-            name: key,
-            value,
-            options: {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
-              path: '/',
-            },
-          });
-        },
-        removeItem: (key: string) => {
-          cookieStore.delete({ name: key });
-        },
-      },
-      // Use service role key for admin operations
       autoRefreshToken: false,
       persistSession: false,
       detectSessionInUrl: false,
     },
-  }, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[]) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {}
+      },
+    },
     global: {
       headers: {
         'x-client-info': 'princesteve-residence-server',

@@ -242,38 +242,38 @@ export default function ApplyPage() {
           <div className="space-y-5">
             <Card title="Personal information" icon="ti-user">
               <Grid2>
-                <Field label="Full name *" value={form.name} onChange={v => save({ name: v })} placeholder="Your full legal name" />
-                <Field label="Sex" type="select" value={form.sex} onChange={v => save({ sex: v })} options={['Male','Female']} />
-                <Field label="Phone 1 *" value={form.phone} onChange={v => save({ phone: v })} placeholder="080xxxxxxxx" />
-                <Field label="Phone 2" value={form.phone2} onChange={v => save({ phone2: v })} placeholder="Optional" />
-                <Field label="Email" value={form.email} onChange={v => save({ email: v })} placeholder="your@email.com" />
-                <Field label="NIN (11 digits)" value={form.nin} onChange={v => save({ nin: v })} placeholder="12345678901" maxLength={11} />
-                <Field label="State of origin" value={form.state_of_origin} onChange={v => save({ state_of_origin: v })} />
-                <Field label="LGA" value={form.lga} onChange={v => save({ lga: v })} />
-                <Field label="Tribe / Ethnicity" value={form.tribe} onChange={v => save({ tribe: v })} />
-                <Field label="Religion" value={form.religion} onChange={v => save({ religion: v })} />
-                <Field label="Home address" value={form.home_address} onChange={v => save({ home_address: v })} className="col-span-2" />
-                <Field label="Reason for moving" value={form.reason_moving} onChange={v => save({ reason_moving: v })} className="col-span-2" />
+                <Field label="Full name *" value={form.name} onChange={(v: string) => save({ name: v })} placeholder="Your full legal name" />
+                <Field label="Sex" type="select" value={form.sex} onChange={(v: string) => save({ sex: v })} options={['Male','Female']} />
+                <Field label="Phone 1 *" value={form.phone} onChange={(v: string) => save({ phone: v })} placeholder="080xxxxxxxx" />
+                <Field label="Phone 2" value={form.phone2} onChange={(v: string) => save({ phone2: v })} placeholder="Optional" />
+                <Field label="Email" value={form.email} onChange={(v: string) => save({ email: v })} placeholder="your@email.com" />
+                <Field label="NIN (11 digits)" value={form.nin} onChange={(v: string) => save({ nin: v })} placeholder="12345678901" maxLength={11} />
+                <Field label="State of origin" value={form.state_of_origin} onChange={(v: string) => save({ state_of_origin: v })} />
+                <Field label="LGA" value={form.lga} onChange={(v: string) => save({ lga: v })} />
+                <Field label="Tribe / Ethnicity" value={form.tribe} onChange={(v: string) => save({ tribe: v })} />
+                <Field label="Religion" value={form.religion} onChange={(v: string) => save({ religion: v })} />
+                <Field label="Home address" value={form.home_address} onChange={(v: string) => save({ home_address: v })} className="col-span-2" />
+                <Field label="Reason for moving" value={form.reason_moving} onChange={(v: string) => save({ reason_moving: v })} className="col-span-2" />
               </Grid2>
             </Card>
 
             <Card title="Employment" icon="ti-briefcase">
               <Grid2>
-                <Field label="Occupation" value={form.occupation} onChange={v => save({ occupation: v })} />
-                <Field label="Employer / Business" value={form.employer} onChange={v => save({ employer: v })} />
-                <Field label="Employer address" value={form.employer_address} onChange={v => save({ employer_address: v })} className="col-span-2" />
-                <Field label="Duration employed" value={form.employer_duration} onChange={v => save({ employer_duration: v })} placeholder="e.g. 3 years" />
-                <Field label="Job title" value={form.job_title} onChange={v => save({ job_title: v })} />
-                <Field label="Office phone" value={form.office_phone} onChange={v => save({ office_phone: v })} />
+                <Field label="Occupation" value={form.occupation} onChange={(v: string) => save({ occupation: v })} />
+                <Field label="Employer / Business" value={form.employer} onChange={(v: string) => save({ employer: v })} />
+                <Field label="Employer address" value={form.employer_address} onChange={(v: string) => save({ employer_address: v })} className="col-span-2" />
+                <Field label="Duration employed" value={form.employer_duration} onChange={(v: string) => save({ employer_duration: v })} placeholder="e.g. 3 years" />
+                <Field label="Job title" value={form.job_title} onChange={(v: string) => save({ job_title: v })} />
+                <Field label="Office phone" value={form.office_phone} onChange={(v: string) => save({ office_phone: v })} />
               </Grid2>
             </Card>
 
             <Card title="Guarantor" icon="ti-shield-check">
               <Grid2>
-                <Field label="Guarantor full name *" value={form.guarantor} onChange={v => save({ guarantor: v })} />
-                <Field label="Guarantor phone *" value={form.guarantor_phone} onChange={v => save({ guarantor_phone: v })} />
-                <Field label="Guarantor address *" value={form.guarantor_address} onChange={v => save({ guarantor_address: v })} className="col-span-2" />
-                <Field label="Guarantor occupation" value={form.guarantor_occupation} onChange={v => save({ guarantor_occupation: v })} />
+                <Field label="Guarantor full name *" value={form.guarantor} onChange={(v: string) => save({ guarantor: v })} />
+                <Field label="Guarantor phone *" value={form.guarantor_phone} onChange={(v: string) => save({ guarantor_phone: v })} />
+                <Field label="Guarantor address *" value={form.guarantor_address} onChange={(v: string) => save({ guarantor_address: v })} className="col-span-2" />
+                <Field label="Guarantor occupation" value={form.guarantor_occupation} onChange={(v: string) => save({ guarantor_occupation: v })} />
               </Grid2>
             </Card>
 
@@ -291,8 +291,8 @@ export default function ApplyPage() {
 
             <Card title="Unit preference" icon="ti-building">
               <Grid2>
-                <Field label="Preferred unit type" type="select" value={form.unit_type} onChange={v => save({ unit_type: v as 'apartment' | 'shop' | 'stall' })} options={['apartment','shop','stall']} />
-                <Field label="Preferred move-in date" type="date" value={form.move_in} onChange={v => save({ move_in: v })} />
+                <Field label="Preferred unit type" type="select" value={form.unit_type} onChange={(v: string) => save({ unit_type: v as 'apartment' | 'shop' | 'stall' })} options={['apartment','shop','stall']} />
+                <Field label="Preferred move-in date" type="date" value={form.move_in} onChange={(v: string) => save({ move_in: v })} />
               </Grid2>
             </Card>
 
@@ -308,7 +308,7 @@ export default function ApplyPage() {
             </InfoBox>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <Field label="Amount to pay (₦) *" type="number" value={String(form.payment_amount || '')} onChange={v => save({ payment_amount: Number(v) })} placeholder="Enter agreed amount" />
+              <Field label="Amount to pay (₦) *" type="number" value={String(form.payment_amount || '')} onChange={(v: string) => save({ payment_amount: Number(v) })} placeholder="Enter agreed amount" />
               <div>
                 <label className="block text-[12px] font-medium text-slate-700 mb-1.5">Payment method</label>
                 <div className="flex gap-2">
@@ -337,8 +337,8 @@ export default function ApplyPage() {
                   <Row2 label="Account name"   value={DEFAULT_SETTINGS.account_name} />
                 </div>
                 <Grid2>
-                  <Field label="Transfer date *" type="date" value={form.payment_date} onChange={v => save({ payment_date: v })} />
-                  <Field label="Depositor name *" value={form.depositor_name} onChange={v => save({ depositor_name: v })} placeholder="Name on bank receipt" />
+                  <Field label="Transfer date *" type="date" value={form.payment_date} onChange={(v: string) => save({ payment_date: v })} />
+                  <Field label="Depositor name *" value={form.depositor_name} onChange={(v: string) => save({ depositor_name: v })} placeholder="Name on bank receipt" />
                 </Grid2>
                 <FileUpload
                   onUpload={url => save({ proof_image: url })}

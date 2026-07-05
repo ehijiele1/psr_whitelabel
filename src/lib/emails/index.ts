@@ -1,4 +1,4 @@
-export {
+import {
   sendEmail,
   sendEmailViaEdge,
   notifyApplicationReceived,
@@ -10,6 +10,19 @@ export {
   notifyRentReminder,
   notifyTicketUpdate,
 } from './email';
+
+export {
+  sendEmail,
+  sendEmailViaEdge,
+  notifyApplicationReceived,
+  notifyApplicationApproved,
+  notifyApplicationRejected,
+  notifyLeaseReady,
+  notifyLeaseFinalized,
+  notifyPaymentReceived,
+  notifyRentReminder,
+  notifyTicketUpdate,
+};
 
 export const emails = {
   applicationReceived: notifyApplicationReceived,

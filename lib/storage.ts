@@ -119,8 +119,8 @@ export const storage = {
       let hasMore = true;
 
       while (hasMore) {
-        const { data: rows, error } = await supabase
-          .from(table)
+        const { data: rows, error } = await (supabase
+          .from(table) as any)
           .select(`id, ${col}, created_at`)
           .not(col, 'is', null)
           .neq(col, '')
@@ -139,7 +139,7 @@ export const storage = {
 
         for (const row of rows) {
           const url = await this.migrateBase64ToStorage(
-            row[col],
+            row[col] as string,
             bucket,
             `${table}/${col}/${row.id}-${Date.now()}.png`,
             { table, column: col, id: row.id }

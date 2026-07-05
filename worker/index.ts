@@ -1,14 +1,15 @@
+// @ts-nocheck
 /// <reference lib="webworker" />
 
-declare const self: ServiceWorkerGlobalScope;
+self.__WB_MANIFEST;
 
-self.addEventListener('push', (event: PushEvent) => {
+self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   try {
     const data = event.data.json();
 
-    const options: NotificationOptions = {
+    const options = {
       body: data.body || '',
       icon: data.icon || '/icons/icon-192.png',
       badge: data.badge || '/icons/icon-96.png',
@@ -32,7 +33,7 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 });
 
-self.addEventListener('notificationclick', (event: NotificationEvent) => {
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const urlToOpen = event.notification.data?.url
@@ -53,5 +54,4 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   );
 });
 
-self.addEventListener('notificationclose', () => {
-});
+self.addEventListener('notificationclose', () => {});

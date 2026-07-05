@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendPushNotification } from '@/src/lib/push';
 
+import type { PushSubscription } from 'web-push';
+
+interface SubscriptionRow {
+  subscription: PushSubscription;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createAdminClient();
@@ -49,8 +55,8 @@ export async function POST(req: NextRequest) {
     }
 
     const results = await Promise.allSettled(
-      subscriptions.map((sub) =>
-        sendPushNotification(sub.subscription as any, {
+      (subscriptions as SubscriptionRow[]).map((sub) =>
+        sendPushNotification(sub.subscription, {
           title,
           body,
           data: payloadData || {},
@@ -64,12 +70,12 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
       if (r.status === 'fulfilled' && r.value.error === 'subscription_expired') {
-        const sub = subscriptions[i];
+        const sub = (subscriptions as SubscriptionRow[])[i];
         await supabase
           .from('push_subscriptions')
           .delete()
-          .eq('endpoint', (sub.subscription as any).endpoint);
-        expired.push((sub.subscription as any).endpoint);
+          .eq('endpoint', sub.subscription.endpoint);
+        expired.push(sub.subscription.endpoint);
       }
     }
 
