@@ -1,6 +1,4 @@
 import React from 'react';
-import { GlassCard } from './GlassCard';
-import { Button } from './Button';
 import { ExternalLink } from 'lucide-react';
 
 interface LeaseAgreementTemplateProps {

@@ -106,7 +106,7 @@ function Row({
     <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
       <span className="text-[12px] text-slate-500">{label}</span>
       <span className={`
-        text-[${small ? '11' : '13'}px]
+        ${small ? 'text-[11px]' : 'text-[13px]'}
         ${bold ? 'font-semibold' : ''}
         ${mono ? 'font-mono text-[11px]' : ''}
         text-slate-800

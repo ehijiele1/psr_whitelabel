@@ -14,22 +14,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid subscription object' }, { status: 400 });
     }
 
+    const endpoint = subscription.endpoint;
+    const p256dh = subscription.keys?.p256dh || '';
+    const auth = subscription.keys?.auth || '';
+
     const { data: existing } = await supabase
       .from('push_subscriptions')
       .select('id')
       .eq('user_id', user.id)
-      .eq('endpoint', subscription.endpoint)
+      .eq('endpoint', endpoint)
       .maybeSingle();
 
     if (existing) {
       await supabase
         .from('push_subscriptions')
-        .update({ subscription, updated_at: new Date().toISOString() })
+        .update({ endpoint, p256dh, auth, user_agent: req.headers.get('user-agent') || null })
         .eq('id', existing.id);
     } else {
       await supabase
         .from('push_subscriptions')
-        .insert({ user_id: user.id, subscription });
+        .insert({ user_id: user.id, endpoint, p256dh, auth, user_agent: req.headers.get('user-agent') || null });
     }
 
     return NextResponse.json({ success: true });
