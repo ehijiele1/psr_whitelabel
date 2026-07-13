@@ -1,7 +1,14 @@
-export { createBrowserClient } from './browser';
-export { createAdminClient } from './server';
+export { createClient } from './browser';
+export { createClient as createServerClient, createAdminClient } from './server';
 export { createAdminServerClient } from './server-admin';
-export { createServerClient } from './middleware';
+export { updateSession } from './middleware';
 export * from './queries';
 export * from './mutations';
-export * from './invitations';
+export {
+  getInvitationByToken,
+  claimInvitation,
+  createInvitation,
+  resendInvitation,
+  redeemInvitation,
+  acceptInvitation,
+} from './invitations';

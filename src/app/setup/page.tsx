@@ -1,0 +1,295 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
+import { CheckCircle, Loader2, ArrowLeft, ArrowRight, Building2, Home, Settings } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import ThemeToggle from "@/components/ui/theme-toggle"
+import { createClient } from "@/lib/supabase/browser"
+import Logo from "@/components/layout/logo"
+import AccountStep from "@/components/setup/account-step"
+import PropertyStep from "@/components/setup/property-step"
+import UnitsStep, { getDefaultGroups, type UnitGroup } from "@/components/setup/units-step"
+
+const STEPS = [
+  { num: 1, label: "Account", icon: Settings },
+  { num: 2, label: "Property", icon: Home },
+  { num: 3, label: "Units", icon: Building2 },
+]
+
+export default function SetupPage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [step, setStep] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState("")
+  const [done, setDone] = useState(false)
+
+  const [account, setAccount] = useState({ fullName: "", email: "", phone: "", password: "" })
+  const [property, setProperty] = useState({ name: "", address: "", type: "" })
+  const [unitGroups, setUnitGroups] = useState<UnitGroup[]>(getDefaultGroups())
+
+  useEffect(() => {
+    const checkOwner = async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("role", "owner")
+        .maybeSingle()
+      if (data) {
+        router.push("/login")
+      } else {
+        setLoading(false)
+      }
+    }
+    checkOwner()
+  }, [router])
+
+  if (loading) return null
+
+  if (done) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="fixed top-4 right-4 z-50"><ThemeToggle /></div>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center mx-auto">
+            <CheckCircle className="h-8 w-8 text-emerald-600 dark:text-emerald-100" />
+          </div>
+          <h1 className="text-2xl font-bold">All Set Up!</h1>
+          <p className="text-sm text-muted-foreground">
+            Owner account created, property &quot;{property.name}&quot; added with {unitGroups.reduce((s, g) => s + g.units.length, 0)} units.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Please check your email ({account.email}) to confirm your account before signing in.
+          </p>
+          <Button onClick={() => router.push("/login")} className="mt-4">
+            Go to Login
+          </Button>
+        </motion.div>
+      </div>
+    )
+  }
+
+  const canProceed = () => {
+    if (step === 1) return account.fullName && account.email && account.phone && account.password.length >= 6
+    if (step === 2) return property.name && property.address && property.type
+    if (step === 3) {
+      const totalUnits = unitGroups.reduce((s, g) => s + g.units.length, 0)
+      if (totalUnits === 0) return false
+      return unitGroups.every((g) =>
+        g.units.every((u) => u.monthlyRent && parseFloat(u.monthlyRent) > 0)
+      )
+    }
+    return false
+  }
+
+  const handleSubmit = async () => {
+    setSubmitting(true)
+    setError("")
+    const supabase = createClient()
+
+    // 1. Create owner auth account
+    const { data: signUpData, error: authError } = await supabase.auth.signUp({
+      email: account.email,
+      password: account.password,
+      options: {
+        data: { full_name: account.fullName, phone: account.phone, role: "owner" },
+      },
+    })
+
+    if (authError || !signUpData.user?.id) {
+      setError(authError?.message || "Failed to create account")
+      setSubmitting(false)
+      return
+    }
+
+    const ownerId = signUpData.user.id
+
+    // 2. Insert property
+    const { data: propData, error: propError } = await supabase
+      .from("properties")
+      .insert({
+        name: property.name,
+        address: property.address,
+        type: property.type,
+        landlord_id: ownerId,
+        status: "active",
+      })
+      .select("id")
+      .single()
+
+    if (propError || !propData) {
+      setError(propError?.message || "Failed to create property")
+      setSubmitting(false)
+      return
+    }
+
+    const propertyId = propData.id
+
+    // 3. Insert all units with their charges
+    const unitRows: Record<string, unknown>[] = []
+    const chargeRows: Record<string, unknown>[] = []
+
+    for (const group of unitGroups) {
+      for (const unit of group.units) {
+        if (!unit.monthlyRent || parseFloat(unit.monthlyRent) <= 0) continue
+
+        const unitId = crypto.randomUUID()
+        unitRows.push({
+          id: unitId,
+          property_id: propertyId,
+          name: unit.name,
+          type: group.type,
+          status: "available",
+          monthly_rent: parseFloat(unit.monthlyRent),
+          deposit_amount: unit.deposit ? parseFloat(unit.deposit) : null,
+        })
+
+        const today = new Date().toISOString().split("T")[0]
+
+        // LAWMA charge
+        if (group.lawma && parseFloat(group.lawma) > 0) {
+          chargeRows.push({
+            unit_id: unitId,
+            charge_type: "lawma",
+            amount: parseFloat(group.lawma),
+            effective_from: today,
+          })
+        }
+
+        // Sanitation charge (apartments only)
+        if (group.type === "apartment" && group.sanitation && parseFloat(group.sanitation) > 0) {
+          chargeRows.push({
+            unit_id: unitId,
+            charge_type: "sanitation",
+            amount: parseFloat(group.sanitation),
+            effective_from: today,
+          })
+        }
+
+        // LUC charge (apartments only, per-unit)
+        if (group.type === "apartment" && unit.luc && parseFloat(unit.luc) > 0) {
+          chargeRows.push({
+            unit_id: unitId,
+            charge_type: "luc",
+            amount: parseFloat(unit.luc),
+            effective_from: today,
+          })
+        }
+      }
+    }
+
+    if (unitRows.length > 0) {
+      const { error: unitError } = await supabase.from("units").insert(unitRows)
+      if (unitError) {
+        setError(unitError.message)
+        setSubmitting(false)
+        return
+      }
+    }
+
+    if (chargeRows.length > 0) {
+      const { error: chargeError } = await supabase.from("unit_charges").insert(chargeRows)
+      if (chargeError) {
+        setError(chargeError.message)
+        setSubmitting(false)
+        return
+      }
+    }
+
+    setSubmitting(false)
+    setDone(true)
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="fixed top-4 right-4 z-50"><ThemeToggle /></div>
+      <div className="w-full max-w-lg space-y-6">
+        <div className="flex justify-center">
+          <Logo />
+        </div>
+
+        {/* Steps indicator */}
+        <div className="flex items-center justify-center gap-0">
+          {STEPS.map((s, i) => (
+            <div key={s.num} className="flex items-center">
+              <div
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  step === s.num
+                    ? "bg-primary text-primary-foreground"
+                    : step > s.num
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <s.icon className="h-3 w-3" />
+                {s.label}
+              </div>
+              {i < STEPS.length - 1 && (
+                <div className={`w-8 h-0.5 mx-1 ${step > s.num ? "bg-primary" : "bg-muted"}`} />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-card border rounded-xl p-6 shadow-sm">
+          <AnimatePresence mode="wait">
+            {step === 1 && (
+              <AccountStep
+                key="step1"
+                form={account}
+                onChange={(fields) => setAccount({ ...account, ...fields })}
+              />
+            )}
+            {step === 2 && (
+              <PropertyStep
+                key="step2"
+                data={property}
+                onChange={(fields) => setProperty({ ...property, ...fields })}
+              />
+            )}
+            {step === 3 && (
+              <UnitsStep
+                key="step3"
+                data={{ groups: unitGroups }}
+                onChange={(groups) => setUnitGroups(groups)}
+              />
+            )}
+          </AnimatePresence>
+
+          {error && (
+            <div className="mt-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+          )}
+
+          <div className="flex items-center justify-between mt-6 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setStep(step - 1)}
+              disabled={step === 1 || submitting}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+
+            {step < 3 ? (
+              <Button onClick={() => setStep(step + 1)} disabled={!canProceed()}>
+                Continue
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            ) : (
+              <Button onClick={handleSubmit} disabled={!canProceed() || submitting}>
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Setting up...</>
+                ) : (
+                  "Complete Setup"
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

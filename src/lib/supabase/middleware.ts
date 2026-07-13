@@ -1,25 +1,48 @@
-import { createServerClient as createSSRServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { NextResponse, type NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
 
-export async function createServerClient() {
-  const cookieStore = await cookies();
+export async function updateSession(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request })
 
-  return createSSRServerClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          return request.cookies.getAll()
         },
-        setAll(cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {}
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
         },
       },
     }
-  );
+  )
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const isDashboard = request.nextUrl.pathname.startsWith("/dashboard")
+  const isAuthRoute = request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/register")
+
+  // Redirect unauthenticated users to login
+  if (!user && isDashboard) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/login"
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (user && isAuthRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/dashboard"
+    return NextResponse.redirect(url)
+  }
+
+  return supabaseResponse
 }

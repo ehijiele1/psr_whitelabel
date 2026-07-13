@@ -1,4 +1,4 @@
-import { createBrowserClient } from './browser';
+import { createClient as createBrowserClient } from "./browser"
 
 export async function createProperty(data: {
   name: string
@@ -8,13 +8,13 @@ export async function createProperty(data: {
   caretaker_contact?: string
 }) {
   const supabase = createBrowserClient();
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) return { error: 'Not authenticated' };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
 
   const { error } = await supabase.from('properties').insert({
     ...data,
-    landlord_id: user.user.id,
-    status: 'active',
+    landlord_id: user.id,
+    status: "active",
   });
   return { error };
 }
@@ -143,15 +143,15 @@ export async function recordPayment(data: {
 
 export async function approvePayment(id: string) {
   const supabase = createBrowserClient();
-  const { data: user } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase
-    .from('payments')
+    .from("payments")
     .update({
-      status: 'approved',
-      approved_by: user.user?.id,
+      status: "approved",
+      approved_by: user?.id,
       approved_at: new Date().toISOString(),
     })
-    .eq('id', id);
+    .eq("id", id);
   return { error };
 }
 

@@ -1,4 +1,6 @@
+import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase/server';
+import { env } from '@/lib/env';
 
 interface EmailPayload {
   to: string;
@@ -7,17 +9,42 @@ interface EmailPayload {
   text?: string;
 }
 
+let resend: Resend | null = null;
+function getResend() {
+  if (!resend && env.resendApiKey) {
+    resend = new Resend(env.resendApiKey);
+  }
+  return resend;
+}
+
 export async function sendEmail(payload: EmailPayload) {
+  const client = getResend();
+
+  if (client) {
+    const { error } = await client.emails.send({
+      from: env.emailFrom,
+      to: payload.to,
+      subject: payload.subject,
+      html: payload.html || "",
+      text: payload.text || "",
+    });
+    if (error) {
+      console.error('[Email] Resend error:', error);
+    }
+  } else {
+    console.warn('[Email] RESEND_API_KEY not set — email not sent');
+  }
+
   const supabase = await createAdminClient();
-  const { error } = await supabase.from('email_queue').insert({
+  const { error: queueError } = await supabase.from('email_queue').insert({
     to_address: payload.to,
     subject: payload.subject,
     html_body: payload.html,
     text_body: payload.text,
-    status: 'pending',
+    status: client ? 'sent' : 'pending',
     retry_count: 0,
   });
-  if (error) console.error('[Email] Queue error:', error);
+  if (queueError) console.error('[Email] Queue error:', queueError);
 }
 
 export async function sendEmailViaEdge(...args: unknown[]) {

@@ -1,5 +1,5 @@
 import webPush from 'web-push';
-import { env } from '@/src/lib/env';
+import { env } from '@/lib/env'
 
 const vapidPublicKey = env.vapidPublicKey;
 const vapidPrivateKey = env.vapidPrivateKey;
