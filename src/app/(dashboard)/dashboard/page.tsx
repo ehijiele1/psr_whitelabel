@@ -33,7 +33,7 @@ export default function DashboardPage() {
 
   if (loading) return null
 
-  const adminRoles = ["owner", "admin", "manager", "caretaker"]
+  const adminRoles = ["landlord", "owner", "admin", "manager", "caretaker"]
 
   if (role && adminRoles.includes(role)) {
     return <LandlordDashboard />

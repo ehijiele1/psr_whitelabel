@@ -235,7 +235,7 @@ export default function MessagesPage() {
     }
   }, [supabase])
 
-  const isAdmin = userRole && ["owner", "admin", "manager", "caretaker"].includes(userRole)
+  const isAdmin = userRole && ["landlord", "owner", "admin", "manager", "caretaker"].includes(userRole)
   const filteredConversations = conversations.filter((c) =>
     c.partnerName.toLowerCase().includes(searchQuery.toLowerCase())
   )

@@ -37,7 +37,7 @@ export async function getUserRole(): Promise<string | null> {
 
 export async function isAdminRole(role: string | null): Promise<boolean> {
   if (!role) return false
-  return ["owner", "admin", "manager", "caretaker"].includes(role)
+  return ["landlord", "owner", "admin", "manager", "caretaker"].includes(role)
 }
 
 export async function isTenantRole(role: string | null): Promise<boolean> {

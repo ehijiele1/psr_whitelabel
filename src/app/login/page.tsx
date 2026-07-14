@@ -32,7 +32,7 @@ export default function LoginPage() {
       .eq("id", user.id)
       .single()
 
-    const adminRoles = ["owner", "admin", "manager", "caretaker"]
+    const adminRoles = ["landlord", "owner", "admin", "manager", "caretaker"]
 
     if (profile && adminRoles.includes(profile.role)) {
       router.push("/dashboard")

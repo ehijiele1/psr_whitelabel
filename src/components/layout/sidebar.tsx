@@ -66,7 +66,7 @@ export default function Sidebar() {
     fetchRole()
   }, [])
 
-  const adminRoles = ["owner", "admin", "manager", "caretaker"]
+  const adminRoles = ["landlord", "owner", "admin", "manager", "caretaker"]
   const isAdmin = role && adminRoles.includes(role)
   const navItems = isAdmin ? adminNavItems : tenantNavItems
 
