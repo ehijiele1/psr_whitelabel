@@ -50,7 +50,6 @@ export async function POST(req: NextRequest) {
       .insert({
         name: property.name,
         address: property.address,
-        type: property.type,
         landlord_id: ownerId,
         status: "active",
       })
