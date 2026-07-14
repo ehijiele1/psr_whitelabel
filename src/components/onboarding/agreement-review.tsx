@@ -28,6 +28,11 @@ interface AgreementReviewProps {
   }>) => void
 }
 
+const formatAmount = (val: string) => {
+  const n = Number(val)
+  return isNaN(n) ? val : n.toLocaleString("en-US")
+}
+
 const today = new Date().toLocaleDateString("en-GB", {
   day: "numeric",
   month: "long",
@@ -107,12 +112,12 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
               <p>7. If the tenant is in default, upon 30 days notice the Landlady may terminate this tenancy, exercise rights of distress, or exercise any other available rights at law.</p>
 
               <p className="font-medium text-foreground pt-1">Rent</p>
-              <p>8. Subject to the provisions of this Lease, the rent for the Property is ₦{rentAmount}.00 per year (the &ldquo;Rent&rdquo;).</p>
+              <p>8. Subject to the provisions of this Lease, the rent for the Property is ₦{formatAmount(rentAmount)}.00 per year (the &ldquo;Rent&rdquo;).</p>
               <p>9. The Tenant will pay the Rent on or before the anniversary of every year of the Term by cash or direct transfer or deposit to the account supplied by the Landlady.</p>
               <p>10. The Landlady may review the rent and provide a minimum of 120 days notice to increase the rent.</p>
 
               <p className="font-medium text-foreground pt-1">Security Deposit</p>
-              <p>11. On execution of this Lease, the Tenant will pay the Landlady a security deposit of ₦{securityDeposit}.00 (the &ldquo;Security&rdquo;).</p>
+              <p>11. On execution of this Lease, the Tenant will pay the Landlady a security deposit of ₦{formatAmount(securityDeposit)}.00 (the &ldquo;Security&rdquo;).</p>
 
               <p className="font-medium text-foreground pt-1">Sureties</p>
               <p>14. The Guarantor, {guarantorName} of {guarantorAddress}, guarantees to the Landlady that the Tenant will comply with the Tenant&rsquo;s obligations under this Lease.</p>

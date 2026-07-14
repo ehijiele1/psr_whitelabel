@@ -52,6 +52,11 @@ export default function ReviewSign({ data, onSignatureChange }: ReviewSignProps)
   const totalDocs =
     data.documents.uploadedFiles.length + data.documents.pendingFiles.length
 
+  const formatAmount = (val: string) => {
+    const n = Number(val)
+    return isNaN(n) ? val : n.toLocaleString("en-US")
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -136,8 +141,8 @@ export default function ReviewSign({ data, onSignatureChange }: ReviewSignProps)
             <h3 className="font-medium text-sm">Agreement & Payment</h3>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm pl-6">
-            <div><span className="text-muted-foreground">Rent:</span> <span className="font-medium">₦{data.agreement.rentAmount || "TBD"}/yr</span></div>
-            <div><span className="text-muted-foreground">Deposit:</span> <span className="font-medium">₦{data.agreement.securityDeposit || "TBD"}</span></div>
+            <div><span className="text-muted-foreground">Rent:</span> <span className="font-medium">₦{data.agreement.rentAmount ? formatAmount(data.agreement.rentAmount) : "TBD"}/yr</span></div>
+            <div><span className="text-muted-foreground">Deposit:</span> <span className="font-medium">₦{data.agreement.securityDeposit ? formatAmount(data.agreement.securityDeposit) : "TBD"}</span></div>
             <div><span className="text-muted-foreground">Term:</span> <span>{data.agreement.termDuration}</span></div>
             <div><span className="text-muted-foreground">Payment:</span> <span className="font-medium capitalize">{data.agreement.paymentMethod === "online" ? "Online (Paystack)" : data.agreement.paymentMethod === "offline" ? "Offline (Bank Transfer)" : "Not selected"}</span></div>
           </div>
