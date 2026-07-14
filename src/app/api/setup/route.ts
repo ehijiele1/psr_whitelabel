@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     // 2. Create profile
     const { error: profileError } = await admin.from("profiles").upsert({
       id: ownerId,
+      user_id: ownerId,
       full_name: account.fullName,
       phone: account.phone,
       role: "owner",
