@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       user_metadata: {
         full_name: account.fullName,
         phone: account.phone,
-        role: "owner",
+        role: "landlord",
       },
     })
 
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       user_id: ownerId,
       full_name: account.fullName,
       phone: account.phone,
-      role: "owner",
+      role: "landlord",
     })
 
     if (profileError) {
