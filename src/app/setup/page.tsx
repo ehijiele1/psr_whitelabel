@@ -94,119 +94,27 @@ export default function SetupPage() {
   const handleSubmit = async () => {
     setSubmitting(true)
     setError("")
-    const supabase = createClient()
-
-    // 1. Create owner auth account
-    const { data: signUpData, error: authError } = await supabase.auth.signUp({
-      email: account.email,
-      password: account.password,
-      options: {
-        data: { full_name: account.fullName, phone: account.phone, role: "owner" },
-      },
-    })
-
-    if (authError || !signUpData.user?.id) {
-      setError(authError?.message || "Failed to create account")
-      setSubmitting(false)
-      return
-    }
-
-    const ownerId = signUpData.user.id
-
-    // 2. Insert property
-    const { data: propData, error: propError } = await supabase
-      .from("properties")
-      .insert({
-        name: property.name,
-        address: property.address,
-        type: property.type,
-        landlord_id: ownerId,
-        status: "active",
+    try {
+      const res = await fetch("/api/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account, property, unitGroups }),
       })
-      .select("id")
-      .single()
 
-    if (propError || !propData) {
-      setError(propError?.message || "Failed to create property")
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "Setup failed")
+        setSubmitting(false)
+        return
+      }
+
       setSubmitting(false)
-      return
+      setDone(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred")
+      setSubmitting(false)
     }
-
-    const propertyId = propData.id
-
-    // 3. Insert all units with their charges
-    const unitRows: Record<string, unknown>[] = []
-    const chargeRows: Record<string, unknown>[] = []
-
-    for (const group of unitGroups) {
-      for (const unit of group.units) {
-        if (!unit.monthlyRent || parseFloat(unit.monthlyRent) <= 0) continue
-
-        const unitId = crypto.randomUUID()
-        unitRows.push({
-          id: unitId,
-          property_id: propertyId,
-          name: unit.name,
-          type: group.type,
-          status: "available",
-          monthly_rent: parseFloat(unit.monthlyRent),
-          deposit_amount: unit.deposit ? parseFloat(unit.deposit) : null,
-        })
-
-        const today = new Date().toISOString().split("T")[0]
-
-        // LAWMA charge
-        if (group.lawma && parseFloat(group.lawma) > 0) {
-          chargeRows.push({
-            unit_id: unitId,
-            charge_type: "lawma",
-            amount: parseFloat(group.lawma),
-            effective_from: today,
-          })
-        }
-
-        // Sanitation charge (apartments only)
-        if (group.type === "apartment" && group.sanitation && parseFloat(group.sanitation) > 0) {
-          chargeRows.push({
-            unit_id: unitId,
-            charge_type: "sanitation",
-            amount: parseFloat(group.sanitation),
-            effective_from: today,
-          })
-        }
-
-        // LUC charge (apartments only, per-unit)
-        if (group.type === "apartment" && unit.luc && parseFloat(unit.luc) > 0) {
-          chargeRows.push({
-            unit_id: unitId,
-            charge_type: "luc",
-            amount: parseFloat(unit.luc),
-            effective_from: today,
-          })
-        }
-      }
-    }
-
-    if (unitRows.length > 0) {
-      const { error: unitError } = await supabase.from("units").insert(unitRows)
-      if (unitError) {
-        setError(unitError.message)
-        setSubmitting(false)
-        return
-      }
-    }
-
-    if (chargeRows.length > 0) {
-      const { error: chargeError } = await supabase.from("unit_charges").insert(chargeRows)
-      if (chargeError) {
-        setError(chargeError.message)
-        setSubmitting(false)
-        return
-      }
-    }
-
-    setSubmitting(false)
-    setDone(true)
   }
 
   return (
