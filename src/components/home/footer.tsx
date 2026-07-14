@@ -11,7 +11,7 @@ export default function Footer() {
           <p className="text-sm text-[#999999] dark:text-gray-500">
             Powered by{" "}
             <a
-              href="https://vanniejay.com"
+              href="https://www.vanniejay.com.ng"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#005A36] dark:text-[#00a85e] hover:underline font-medium"

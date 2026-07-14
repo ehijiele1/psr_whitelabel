@@ -1,46 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import ThemeToggle from "@/components/ui/theme-toggle"
-import { createClient } from "@/lib/supabase/browser"
 
 export default function Navbar() {
-  const pathname = usePathname()
-  const [noOwner, setNoOwner] = useState(false)
-
-  useEffect(() => {
-    if (pathname !== "/") return
-    const check = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("role", "owner")
-        .maybeSingle()
-      if (!data) setNoOwner(true)
-    }
-    check()
-  }, [pathname])
 
   return (
     <>
-      {noOwner && (
-        <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
-            <p className="text-xs text-amber-800 dark:text-amber-200">
-              No owner account found. Complete the setup to get started.
-            </p>
-            <Link
-              href="/setup"
-              className="text-xs font-medium text-amber-800 dark:text-amber-200 underline hover:no-underline"
-            >
-              Go to Setup
-            </Link>
-          </div>
-        </div>
-      )}
       <nav className="sticky top-0 z-50 bg-white dark:bg-[#0f172a] border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
