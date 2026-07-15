@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { requireRole } from '@/lib/auth/require-role';
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireRole(['landlord', 'caretaker']);
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const formData = await req.formData();
     const status = formData.get('status') as string;
@@ -18,8 +22,7 @@ export async function POST(
 
     const updateData: Record<string, string> = { status };
     if (status === 'resolved') {
-      const { data: { user } } = await supabase.auth.getUser();
-      updateData.resolved_by = user?.id || '';
+      updateData.resolved_by = auth.user.id;
     }
 
     const { error } = await supabase
@@ -32,7 +35,7 @@ export async function POST(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.redirect(new URL('/dashboard/caretaker', req.url));
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[Ticket Update] Error:', err);
     return NextResponse.json(

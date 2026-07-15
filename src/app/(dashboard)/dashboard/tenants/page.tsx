@@ -268,8 +268,8 @@ export default function TenantsPage() {
                         </td>
                         <td className="px-6 py-3 text-sm">{tenant.units?.name || "-"}</td>
                         <td className="px-6 py-3 text-sm text-muted-foreground">{tenant.properties?.name || "-"}</td>
-                        <td className="px-6 py-3 text-sm font-medium text-right">{formatCurrency(tenant.rent_amount || 0)}</td>
-                        <td className="px-6 py-3 text-sm text-muted-foreground">{formatDate(tenant.tenancy_end)}</td>
+                        <td className="px-6 py-3 text-sm font-medium text-right">{formatCurrency(tenant.rent || 0)}</td>
+                        <td className="px-6 py-3 text-sm text-muted-foreground">{formatDate(tenant.lease_end)}</td>
                         <td className="px-6 py-3 text-right">
                           <Badge variant={status.variant} className="text-xs">
                             {status.label}
@@ -344,6 +344,8 @@ function TenantDialog({
   const [userQuery, setUserQuery] = useState("")
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedUserId, setSelectedUserId] = useState("")
+  const [selectedUserName, setSelectedUserName] = useState("")
+  const [selectedUserPhone, setSelectedUserPhone] = useState("")
   const [tenancyStart, setTenancyStart] = useState("")
   const [tenancyEnd, setTenancyEnd] = useState("")
   const [notes, setNotes] = useState("")
@@ -365,12 +367,14 @@ function TenantDialog({
     if (isEditing && editingTenant) {
       setSelectedPropertyId(editingTenant.property_id || "")
       setSelectedUnitId(editingTenant.unit_id || "")
-      setRentAmount(String(editingTenant.rent_amount || ""))
+      setRentAmount(String(editingTenant.rent || ""))
       setSelectedUserId(editingTenant.user_id || "")
-      setTenancyStart(editingTenant.tenancy_start?.split("T")[0] || "")
-      setTenancyEnd(editingTenant.tenancy_end?.split("T")[0] || "")
+      setSelectedUserName(editingTenant.name || editingTenant.profiles?.full_name || "")
+      setSelectedUserPhone(editingTenant.phone || editingTenant.profiles?.phone || "")
+      setTenancyStart(editingTenant.lease_start?.split("T")[0] || "")
+      setTenancyEnd(editingTenant.lease_end?.split("T")[0] || "")
       setNotes(editingTenant.notes || "")
-      setUserQuery(editingTenant.profiles?.full_name || "")
+      setUserQuery(editingTenant.profiles?.full_name || editingTenant.name || "")
     } else {
       setMode("existing")
       setCreateMethod("password")
@@ -378,6 +382,8 @@ function TenantDialog({
       setSelectedUnitId("")
       setRentAmount("")
       setSelectedUserId("")
+      setSelectedUserName("")
+      setSelectedUserPhone("")
       setTenancyStart("")
       setTenancyEnd("")
       setNotes("")
@@ -398,7 +404,7 @@ function TenantDialog({
     }
     const query = supabase
       .from("units")
-      .select("id, name, monthly_rent")
+      .select("id, name, monthly_rent, type")
       .eq("property_id", selectedPropertyId)
     if (!isEditing) {
       query.eq("status", "available")
@@ -423,7 +429,7 @@ function TenantDialog({
     const timer = setTimeout(async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, email, phone")
+        .select("id, user_id, full_name, email, phone")
         .or(`full_name.ilike.%${userQuery}%,email.ilike.%${userQuery}%,phone.ilike.%${userQuery}%`)
         .limit(10)
       if (data) setSearchResults(data)
@@ -442,7 +448,7 @@ function TenantDialog({
           email: newEmail,
           password: newPassword,
           options: {
-            data: { full_name: newFullName, phone: newPhone, role: "resident" },
+            data: { full_name: newFullName, phone: newPhone, role: "tenant" },
           },
         })
         if (signUpError || !signUpData.user) {
@@ -456,7 +462,7 @@ function TenantDialog({
           phone: newPhone,
           email: newEmail || undefined,
           full_name: newFullName,
-          role: "resident",
+          role: "tenant",
           property_id: selectedPropertyId || undefined,
           unit_id: selectedUnitId || undefined,
           notes: notes || undefined,
@@ -473,13 +479,21 @@ function TenantDialog({
       }
     }
 
+    const selectedUnit = availableUnits.find((u) => u.id === selectedUnitId)
+    const tenantName = mode === "new_user" ? newFullName : selectedUserName
+    const tenantPhone = mode === "new_user" ? newPhone : selectedUserPhone
+
     const payload = {
       user_id: userId,
       unit_id: selectedUnitId,
       property_id: selectedPropertyId,
-      tenancy_start: tenancyStart,
-      tenancy_end: tenancyEnd,
-      rent_amount: Number(rentAmount),
+      name: tenantName,
+      phone: tenantPhone,
+      unit: selectedUnit?.name || editingTenant?.unit || "",
+      type: selectedUnit?.type || editingTenant?.type || "apartment",
+      lease_start: tenancyStart,
+      lease_end: tenancyEnd,
+      rent: Number(rentAmount),
       notes,
     }
 
@@ -559,7 +573,9 @@ function TenantDialog({
                           key={profile.id}
                           type="button"
                           onClick={() => {
-                            setSelectedUserId(profile.id)
+                            setSelectedUserId(profile.user_id || profile.id)
+                            setSelectedUserName(profile.full_name || "")
+                            setSelectedUserPhone(profile.phone || "")
                             setUserQuery(profile.full_name || profile.email)
                             setSearchResults([])
                           }}

@@ -30,7 +30,9 @@ export function PropertyProvider({ children }: { children: React.ReactNode }) {
       .select("id, name")
       .order("name")
 
-    if (!error && data) {
+    if (error) {
+      console.error("[PropertyContext] Failed to load properties:", error.message)
+    } else if (data) {
       setProperties(data)
       if (!activePropertyId && data.length > 0) {
         setActivePropertyId(data[0].id)

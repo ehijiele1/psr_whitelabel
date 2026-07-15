@@ -32,17 +32,17 @@ export default function SetupPage() {
 
   useEffect(() => {
     const checkOwner = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("role", "owner")
-        .maybeSingle()
-      if (data) {
-        router.push("/login")
-      } else {
-        setLoading(false)
+      try {
+        const res = await fetch("/api/setup", { method: "GET" })
+        const data = await res.json()
+        if (data.complete) {
+          router.push("/login")
+          return
+        }
+      } catch {
+        // If the status check fails, fall through and show the form.
       }
+      setLoading(false)
     }
     checkOwner()
   }, [router])

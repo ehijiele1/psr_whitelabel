@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { requireRole } from '@/lib/auth/require-role';
 
 interface ImportRow {
   tenant_name: string;
@@ -16,9 +17,10 @@ interface ImportRow {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRole(['landlord']);
+    if (!auth.ok) return auth.response;
+
     const supabase = await createAdminClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const records: ImportRow[] = body.records;

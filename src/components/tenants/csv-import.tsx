@@ -82,7 +82,7 @@ export default function CsvImport() {
           property_name: (r.property_name || "").trim(),
           unit_name: (r.unit_name || "").trim(),
           unit_type: (r.unit_type || "").trim().toLowerCase(),
-          role: (r.role || "").trim().toLowerCase() || "resident",
+          role: (r.role || "").trim().toLowerCase() || "tenant",
           current_rent: (r.current_rent || "").trim(),
           deposit_paid: (r.deposit_paid || "").trim(),
           tenancy_start: (r.tenancy_start || "").trim(),
@@ -247,7 +247,7 @@ export default function CsvImport() {
             email: row.email || `${row.phone.replace(/[^0-9]/g, "")}@temp.princester.com`,
             password: crypto.randomUUID().slice(0, 12),
             options: {
-              data: { full_name: row.full_name, phone: row.phone, role: row.role || "resident" },
+              data: { full_name: row.full_name, phone: row.phone, role: row.role || "tenant" },
             },
           })
           if (signUpError || !signUpData.user?.id) {
@@ -275,10 +275,10 @@ export default function CsvImport() {
           user_id: profileId,
           unit_id: unit.id,
           property_id: propId,
-          rent_amount: Math.round(parseFloat(row.current_rent)),
+          rent: Math.round(parseFloat(row.current_rent)),
           deposit_amount: row.deposit_paid ? Math.round(parseFloat(row.deposit_paid)) : null,
-          tenancy_start: row.tenancy_start,
-          tenancy_end: row.tenancy_end,
+          lease_start: row.tenancy_start,
+          lease_end: row.tenancy_end,
           status: "active",
           approved_by: user.id,
           notes: row.notes || null,
@@ -318,19 +318,24 @@ export default function CsvImport() {
           tenantRows.find((t) => t.phone === row.tenant_phone)?.property_name.toLowerCase() || ""
         )
 
+        const period =
+          row.cycle_start && row.cycle_end
+            ? `${row.cycle_start} to ${row.cycle_end}`
+            : row.cycle_start || null
+        const payType = (row.payment_type || "rent").toLowerCase() === "utility" ? "levy" : (row.payment_type || "rent").toLowerCase()
+
         const { error: payError } = await supabase.from("payments").insert({
           tenant_id: tenantId,
           property_id: propId || null,
           amount: Math.round(parseFloat(row.amount_paid)),
-          type: row.payment_type,
-          cycle_start: row.cycle_start,
-          cycle_end: row.cycle_end,
-          method: "offline",
+          type: payType,
+          period,
+          method: "cash",
           status: "approved",
           approved_by: user.id,
           approved_at: new Date().toISOString(),
           notes: row.notes || null,
-          created_at: row.payment_date,
+          date: row.payment_date || new Date().toISOString().split("T")[0],
         })
 
         if (payError) {

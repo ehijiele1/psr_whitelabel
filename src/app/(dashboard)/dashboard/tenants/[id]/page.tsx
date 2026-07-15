@@ -21,9 +21,9 @@ interface TenantData {
   id: string
   user_id: string
   status: string
-  rent_amount: number | null
-  tenancy_start: string | null
-  tenancy_end: string | null
+  rent: number | null
+  lease_start: string | null
+  lease_end: string | null
   notes: string | null
   profiles: TenantProfile
   units: TenantUnit
@@ -35,8 +35,7 @@ interface PaymentData {
   amount: number
   status: string
   method: string | null
-  cycle_start: string | null
-  cycle_end: string | null
+  period: string | null
   created_at: string
 }
 
@@ -234,10 +233,10 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Monthly Rent", value: formatCurrency(tenant.rent_amount || 0), icon: Receipt },
+          { label: "Monthly Rent", value: formatCurrency(tenant.rent || 0), icon: Receipt },
           { label: "Deposit", value: formatCurrency(unit.deposit_amount || 0), icon: FileText },
-          { label: "Lease Start", value: formatDate(tenant.tenancy_start), icon: Calendar },
-          { label: "Lease End", value: formatDate(tenant.tenancy_end), icon: Calendar },
+          { label: "Lease Start", value: formatDate(tenant.lease_start), icon: Calendar },
+          { label: "Lease End", value: formatDate(tenant.lease_end), icon: Calendar },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -279,10 +278,10 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div><span className="text-muted-foreground">Property</span><p className="font-medium">{property.name || "-"}</p></div>
                       <div><span className="text-muted-foreground">Unit</span><p className="font-medium">{unit.name || "-"}</p></div>
-                      <div><span className="text-muted-foreground">Rent Amount</span><p className="font-medium">{formatCurrency(tenant.rent_amount || 0)}/month</p></div>
+                      <div><span className="text-muted-foreground">Rent Amount</span><p className="font-medium">{formatCurrency(tenant.rent || 0)}/month</p></div>
                       <div><span className="text-muted-foreground">Security Deposit</span><p className="font-medium">{formatCurrency(unit.deposit_amount || 0)}</p></div>
-                      <div><span className="text-muted-foreground">Lease Start</span><p className="font-medium">{formatDate(tenant.tenancy_start)}</p></div>
-                      <div><span className="text-muted-foreground">Lease End</span><p className="font-medium">{formatDate(tenant.tenancy_end)}</p></div>
+                      <div><span className="text-muted-foreground">Lease Start</span><p className="font-medium">{formatDate(tenant.lease_start)}</p></div>
+                      <div><span className="text-muted-foreground">Lease End</span><p className="font-medium">{formatDate(tenant.lease_end)}</p></div>
                       <div><span className="text-muted-foreground">Status</span><p className="font-medium capitalize">{tenant.status}</p></div>
                       {tenant.notes && (
                         <div className="col-span-2">
@@ -328,7 +327,7 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
                         payments.map((payment, i) => (
                           <tr key={payment.id || i} className="border-b border-border/50 last:border-0">
                             <td className="px-6 py-3 text-sm font-medium">
-                              {formatDate(payment.cycle_start)} - {formatDate(payment.cycle_end)}
+                              {payment.period ? payment.period : formatDate(payment.created_at)}
                             </td>
                             <td className="px-6 py-3 text-sm font-medium text-right">{formatCurrency(payment.amount)}</td>
                             <td className="px-6 py-3 text-sm text-muted-foreground">{formatDate(payment.created_at)}</td>

@@ -104,9 +104,9 @@ export default function ApplicationsPage() {
           user_id: app.user_id,
           unit_id: app.unit_id,
           property_id: app.property_id,
-          tenancy_start: tenancyStart,
-          tenancy_end: tenancyEnd,
-          rent_amount: unit?.monthly_rent || 0,
+          lease_start: tenancyStart,
+          lease_end: tenancyEnd,
+          rent: unit?.monthly_rent || 0,
           status: "active",
           approved_by: user.id,
         })
@@ -118,7 +118,7 @@ export default function ApplicationsPage() {
         }
 
         await supabase.from("units").update({ status: "occupied" }).eq("id", app.unit_id)
-        await supabase.from("profiles").update({ role: "resident" }).eq("id", app.user_id)
+        await supabase.from("profiles").update({ role: "tenant" }).eq("user_id", app.user_id)
       }
 
       toast.success("Application approved")

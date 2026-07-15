@@ -69,18 +69,19 @@ export default function MessagesPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
-        .eq("id", user.id)
+        .select("role, user_id")
+        .eq("user_id", user.id)
         .single()
 
       const role = profile?.role || ""
-      setUserId(user.id)
+      const profileUserId = profile?.user_id || user.id
+      setUserId(profileUserId)
       setUserRole(role)
 
       const { data: msgs } = await supabase
         .from("messages")
         .select("*")
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .or(`sender_id.eq.${profileUserId},receiver_id.eq.${profileUserId}`)
         .order("created_at", { ascending: false })
 
       if (!msgs || msgs.length === 0) {
@@ -91,7 +92,7 @@ export default function MessagesPage() {
       const otherIds = new Set<string>()
       const grouped = new Map<string, Message[]>()
       for (const msg of msgs as Message[]) {
-        const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id
+        const otherId = msg.sender_id === profileUserId ? msg.receiver_id : msg.sender_id
         otherIds.add(otherId)
         if (!grouped.has(otherId)) grouped.set(otherId, [])
         grouped.get(otherId)!.push(msg)
@@ -99,10 +100,10 @@ export default function MessagesPage() {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name")
-        .in("id", Array.from(otherIds))
+        .select("user_id, full_name")
+        .in("user_id", Array.from(otherIds))
 
-      const profileMap = new Map((profiles || []).map((p: { id: string; full_name: string }) => [p.id, p.full_name]))
+      const profileMap = new Map((profiles || []).map((p: { user_id: string; full_name: string }) => [p.user_id, p.full_name]))
 
       const convs: Conv[] = Array.from(grouped.entries()).map(([partnerId, msgs]) => {
         const last = msgs[0]
@@ -143,7 +144,7 @@ export default function MessagesPage() {
           return [...prev, { partnerId: otherId, partnerName: "New", partnerInitials: "??", lastMessage: msg.message, lastTime: "now", messages: [msg] }]
         })
 
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", otherId).single()
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", otherId).single()
         if (profile) {
           setConversations((prev) =>
             prev.map((c) => {
@@ -235,7 +236,7 @@ export default function MessagesPage() {
     }
   }, [supabase])
 
-  const isAdmin = userRole && ["landlord", "owner", "admin", "manager", "caretaker"].includes(userRole)
+  const isAdmin = userRole && ["landlord", "caretaker"].includes(userRole)
   const filteredConversations = conversations.filter((c) =>
     c.partnerName.toLowerCase().includes(searchQuery.toLowerCase())
   )

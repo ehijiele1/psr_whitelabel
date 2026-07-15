@@ -38,7 +38,7 @@ export async function claimInvitation(token: string): Promise<{ success: boolean
       migrated: true,
       verified_at: new Date().toISOString(),
     })
-    .eq("id", user.id)
+    .eq("user_id", user.id)
 
   if (profileError) return { success: false, error: profileError.message }
 

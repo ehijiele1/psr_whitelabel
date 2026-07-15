@@ -15,7 +15,7 @@ export async function getProfile() {
   const { data } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user.id)
+    .eq("user_id", user.id)
     .single()
 
   return data
@@ -29,7 +29,7 @@ export async function getUserRole(): Promise<string | null> {
   const { data } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", user.id)
+    .eq("user_id", user.id)
     .single()
 
   return data?.role || null
@@ -37,12 +37,12 @@ export async function getUserRole(): Promise<string | null> {
 
 export async function isAdminRole(role: string | null): Promise<boolean> {
   if (!role) return false
-  return ["landlord", "owner", "admin", "manager", "caretaker"].includes(role)
+  return ["landlord", "caretaker"].includes(role)
 }
 
 export async function isTenantRole(role: string | null): Promise<boolean> {
   if (!role) return false
-  return ["resident", "stall_tenant"].includes(role)
+  return ["tenant"].includes(role)
 }
 
 export async function getProperties() {

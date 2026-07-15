@@ -22,10 +22,7 @@ interface Unit {
   property_id: string
 }
 
-const roleOptions = [
-  { value: "resident", label: "Home Resident", desc: "Self-onboarding, tech-savvy tenant" },
-  { value: "stall_tenant", label: "Stall/Shop Occupant", desc: "Admin-managed, less tech-savvy" },
-]
+const ROLE = "tenant"
 
 export default function MigratePage() {
   const router = useRouter()
@@ -39,7 +36,7 @@ export default function MigratePage() {
     fullName: "",
     phone: "",
     email: "",
-    role: "resident",
+    role: ROLE,
     propertyId: "",
     unitId: "",
     notes: "",
@@ -236,33 +233,6 @@ export default function MigratePage() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
             </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="font-semibold text-sm">Tenant Type</h2>
-          <div className="space-y-2">
-            {roleOptions.map((opt) => (
-              <label
-                key={opt.value}
-                className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  form.role === opt.value ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="role"
-                  value={opt.value}
-                  checked={form.role === opt.value}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="mt-1"
-                />
-                <div>
-                  <div className="font-medium text-sm">{opt.label}</div>
-                  <div className="text-xs text-muted-foreground">{opt.desc}</div>
-                </div>
-              </label>
-            ))}
           </div>
         </div>
 

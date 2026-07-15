@@ -4,6 +4,7 @@ import {
   sendPaymentConfirmation,
   sendAgreementSigned,
 } from '@/lib/notifications/sms'
+import { requireRole } from '@/lib/auth/require-role';
 
 type SmsAction = 'application-received' | 'payment-confirmed' | 'agreement-signed';
 
@@ -15,10 +16,17 @@ const ACTION_MAP: Record<SmsAction, (phone: string, name: string) => Promise<{ s
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRole(['landlord', 'caretaker']);
+    if (!auth.ok) return auth.response;
+
     const { action, phone, name, amount, reference } = await req.json();
 
     if (!action || !phone || !name) {
       return NextResponse.json({ error: 'Missing required fields: action, phone, name' }, { status: 400 });
+    }
+
+    if (typeof phone !== 'string' || !/^\+?\d{7,15}$/.test(phone.replace(/\s/g, ''))) {
+      return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 });
     }
 
     if (!(action in ACTION_MAP)) {

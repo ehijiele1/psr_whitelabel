@@ -16,20 +16,18 @@ interface Payment {
   type: string
   status: string
   created_at: string
-  tenant: { full_name: string }[] | null
+  tenant: { name: string }[] | null
   unit: { name: string }[] | null
 }
 
 const statusStyles: Record<string, { label: string; variant: "success" | "warning" | "destructive" | "secondary" }> = {
-  paid: { label: "Paid", variant: "success" },
-  confirmed: { label: "Confirmed", variant: "success" },
+  approved: { label: "Approved", variant: "success" },
   pending: { label: "Pending", variant: "warning" },
-  overdue: { label: "Overdue", variant: "destructive" },
-  failed: { label: "Failed", variant: "destructive" },
+  rejected: { label: "Rejected", variant: "destructive" },
 }
 
 function formatAmount(amount: number) {
-  return `₦${(amount / 100).toLocaleString()}`
+  return `₦${amount.toLocaleString()}`
 }
 
 function formatDate(date: string) {
@@ -50,7 +48,7 @@ export default function RecentPayments({ propertyId }: { propertyId: string }) {
       const supabase = createClient()
       const { data, error } = await supabase
         .from("payments")
-        .select("id, amount, type, status, created_at, tenant:tenants!inner(full_name), unit:units!inner(name)")
+        .select("id, amount, type, status, created_at, tenant:tenants!inner(name), unit:units!inner(name)")
         .eq("property_id", propertyId)
         .order("created_at", { ascending: false })
         .limit(5)
@@ -113,7 +111,7 @@ export default function RecentPayments({ propertyId }: { propertyId: string }) {
                 <motion.tbody variants={staggerContainer} initial="hidden" animate="visible">
                   {payments.map((payment) => {
                     const status = statusStyles[payment.status] ?? { label: payment.status, variant: "secondary" }
-                    const tenantName = payment.tenant?.[0]?.full_name ?? "Unknown"
+                    const tenantName = payment.tenant?.[0]?.name ?? "Unknown"
                     return (
                       <motion.tr
                         key={payment.id}

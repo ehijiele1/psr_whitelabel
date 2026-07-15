@@ -31,12 +31,10 @@ interface StaffMember {
   updated_at: string
 }
 
-const STAFF_ROLES = ["admin", "manager", "caretaker"]
+const STAFF_ROLES = ["caretaker"]
 
 const roleBadge: Record<string, { label: string; variant: "default" | "secondary" | "warning" }> = {
-  owner: { label: "Owner", variant: "default" },
-  admin: { label: "Admin", variant: "default" },
-  manager: { label: "Manager", variant: "secondary" },
+  landlord: { label: "Landlord", variant: "default" },
   caretaker: { label: "Caretaker", variant: "warning" },
 }
 
@@ -53,7 +51,7 @@ export default function StaffPage() {
   const [newFullName, setNewFullName] = useState("")
   const [newEmail, setNewEmail] = useState("")
   const [newPhone, setNewPhone] = useState("")
-  const [newRole, setNewRole] = useState("admin")
+  const [newRole, setNewRole] = useState("caretaker")
   const [newPassword, setNewPassword] = useState("")
 
   const fetchStaff = useCallback(async () => {
@@ -63,11 +61,11 @@ export default function StaffPage() {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single()
     setCurrentUserRole(profile?.role || null)
 
-    if (!profile || !["owner", "admin"].includes(profile.role)) {
+    if (!profile || profile.role !== "landlord") {
       setLoading(false)
       return
     }
@@ -129,11 +127,11 @@ export default function StaffPage() {
     setNewEmail("")
     setNewPhone("")
     setNewPassword("")
-    setNewRole("admin")
+    setNewRole("caretaker")
     fetchStaff()
   }
 
-  const canManage = currentUserRole === "owner" || currentUserRole === "admin"
+  const canManage = currentUserRole === "landlord"
 
   return (
     <motion.div
@@ -145,9 +143,9 @@ export default function StaffPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Staff Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage admin, manager, and caretaker accounts.
-          </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage caretaker accounts.
+              </p>
         </div>
         {canManage && (
           <Button onClick={() => setDialogOpen(true)}>
@@ -182,9 +180,9 @@ export default function StaffPage() {
           <div className="p-12 text-center">
             <Shield className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
             <p className="font-medium">No staff accounts yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Add admin, manager, or caretaker accounts above.
-            </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Add caretaker accounts above.
+              </p>
           </div>
         ) : (
           <div className="divide-y">
@@ -285,8 +283,6 @@ export default function StaffPage() {
                 onChange={(e) => setNewRole(e.target.value)}
                 className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
                 <option value="caretaker">Caretaker</option>
               </select>
             </div>

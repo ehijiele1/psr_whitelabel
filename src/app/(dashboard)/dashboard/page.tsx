@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/browser"
 import LandlordDashboard from "./landlord-view"
 import TenantDashboard from "./tenant-view"
@@ -21,7 +22,7 @@ export default function DashboardPage() {
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .single()
 
       setRole(profile?.role || null)
@@ -31,9 +32,15 @@ export default function DashboardPage() {
     fetchRole()
   }, [])
 
-  if (loading) return null
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
-  const adminRoles = ["landlord", "owner", "admin", "manager", "caretaker"]
+  const adminRoles = ["landlord", "caretaker"]
 
   if (role && adminRoles.includes(role)) {
     return <LandlordDashboard />

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { initializeSubscription, disableSubscription, enableSubscription } from '@/lib/paystack'
+import { requireRole } from '@/lib/auth/require-role';
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRole(['landlord']);
+    if (!auth.ok) return auth.response;
+
     const supabase = await createAdminClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { action, plan_id, tenant_id, subscription_id } = await req.json();
 
@@ -26,6 +28,17 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (!tenant) return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
+
+      const { data: ownedProperty } = await supabase
+        .from('properties')
+        .select('id')
+        .eq('id', plan.property_id)
+        .eq('landlord_id', auth.user.id)
+        .maybeSingle();
+
+      if (!ownedProperty) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
       const { data: sub, error: subErr } = await supabase
         .from('tenant_subscriptions')
@@ -63,6 +76,17 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (!sub) return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+
+      const { data: ownedProperty } = await supabase
+        .from('properties')
+        .select('id')
+        .eq('id', sub.property_id)
+        .eq('landlord_id', auth.user.id)
+        .maybeSingle();
+
+      if (!ownedProperty) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
       if (sub.subscription_code) {
         await disableSubscription(sub.subscription_code).catch(() => {});

@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
     .update(body)
     .digest('hex');
 
-  if (hash !== signature) {
+  const hashBuf = Buffer.from(hash);
+  const sigBuf = Buffer.from(signature);
+  if (hashBuf.length !== sigBuf.length || !crypto.timingSafeEqual(hashBuf, sigBuf)) {
     console.error('[Paystack Webhook] Signature mismatch');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
@@ -36,6 +38,18 @@ export async function POST(req: NextRequest) {
   if (eventType === 'charge.success') {
     const { reference, amount, paid_at, metadata } = data;
     const amountNaira = amount / 100;
+
+    // Idempotency: skip if this reference was already processed
+    if (reference) {
+      const { data: existing } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('paystack_ref', reference)
+        .maybeSingle();
+      if (existing) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+    }
 
     if (data.subscription_code) {
       return await handleSubscriptionPayment(supabase, data, amountNaira);
@@ -78,6 +92,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
       }
 
+      const cycleStart = metadata?.cycle_start as string | undefined
+      const cycleEnd = metadata?.cycle_end as string | undefined
+      const period =
+        cycleStart && cycleEnd ? `${cycleStart} to ${cycleEnd}` : (cycleStart || null)
+
       const { error } = await supabase.from('payments').insert({
         tenant_id:    metadata.tenant_id,
         tenant_name:  tenant.name,
@@ -87,6 +106,7 @@ export async function POST(req: NextRequest) {
         amount:       amountNaira,
         method:       'paystack',
         date:         paid_at.split('T')[0],
+        period,
         status:       'approved',
         paystack_ref: reference,
         is_partial:   false,

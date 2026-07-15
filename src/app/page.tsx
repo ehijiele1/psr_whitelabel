@@ -24,7 +24,7 @@ export default function HomePage() {
       const { data } = await supabase
         .from("profiles")
         .select("id")
-        .eq("role", "owner")
+        .eq("role", "landlord")
         .maybeSingle()
       setOwnerExists(!!data)
       setChecking(false)

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { requireRole } from '@/lib/auth/require-role';
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRole(['landlord', 'caretaker']);
+    if (!auth.ok) return auth.response;
+
     const body = await req.json();
     const { to, subject, html, text } = body;
 
@@ -11,6 +15,11 @@ export async function POST(req: NextRequest) {
         { error: 'Missing required fields: to, subject, and html or text' },
         { status: 400 }
       );
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (typeof to !== 'string' || !emailPattern.test(to)) {
+      return NextResponse.json({ error: 'Invalid recipient email' }, { status: 400 });
     }
 
     // Attempt to send via Supabase email_queue
@@ -25,12 +34,6 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
-      // Fallback to direct SMTP if configured
-      if (process.env.SMTP_HOST) {
-        // In production, use nodemailer or Resend/Postmark API
-        console.log('[Email] Queue fallback: SMTP would be used');
-        return NextResponse.json({ success: true, method: 'smtp_fallback' });
-      }
       console.error('[Email] Failed to queue:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

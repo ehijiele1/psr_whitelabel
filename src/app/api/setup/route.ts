@@ -13,6 +13,28 @@ export async function POST(req: NextRequest) {
 
     const admin = await createAdminClient()
 
+    // Authorization: setup is only allowed when no landlord exists yet,
+    // OR when a valid SETUP_SECRET token is supplied via header.
+    const { count: landlordCount, error: countError } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "landlord")
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 })
+    }
+
+    if ((landlordCount ?? 0) > 0) {
+      const setupSecret = process.env.SETUP_SECRET
+      const provided = req.headers.get("x-setup-secret")
+      if (!setupSecret || !provided || provided !== setupSecret) {
+        return NextResponse.json(
+          { error: "Setup is already complete" },
+          { status: 403 }
+        )
+      }
+    }
+
     // 1. Create owner auth account using admin API
     const { data: createData, error: createError } = await admin.auth.admin.createUser({
       email: account.email,
@@ -37,6 +59,7 @@ export async function POST(req: NextRequest) {
       user_id: ownerId,
       full_name: account.fullName,
       phone: account.phone,
+      email: account.email,
       role: "landlord",
     })
 
@@ -129,6 +152,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error("[Setup] Error:", err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "An unexpected error occurred" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET() {
+  try {
+    const admin = await createAdminClient()
+    const { count, error } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "landlord")
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ complete: (count ?? 0) > 0 })
+  } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "An unexpected error occurred" },
       { status: 500 }

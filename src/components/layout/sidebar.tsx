@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -58,7 +59,7 @@ export default function Sidebar() {
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .single()
 
       setRole(profile?.role || null)
@@ -66,9 +67,9 @@ export default function Sidebar() {
     fetchRole()
   }, [])
 
-  const adminRoles = ["landlord", "owner", "admin", "manager", "caretaker"]
+  const adminRoles = ["landlord", "caretaker"]
   const isAdmin = role && adminRoles.includes(role)
-  const navItems = isAdmin ? adminNavItems : tenantNavItems
+  const navItems = role ? (isAdmin ? adminNavItems : tenantNavItems) : []
 
   return (
     <motion.aside
@@ -84,7 +85,12 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
+        {navItems.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
           return (
             <Link key={item.href} href={item.href}>
@@ -121,7 +127,7 @@ export default function Sidebar() {
               </motion.div>
             </Link>
           )
-        })}
+        }))}
       </nav>
 
       <div className="p-2 border-t border-sidebar-border">

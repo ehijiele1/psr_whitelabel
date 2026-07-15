@@ -28,8 +28,7 @@ interface Payment {
   tenant_id: string
   amount: number
   type: string
-  period_start: string
-  period_end: string
+  period: string | null
   method: string
   notes: string | null
   status: string
@@ -189,13 +188,26 @@ export default function PaymentsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
+    const selectedTenant = tenants.find((t) => t.id === formData.tenant_id)
+    if (!selectedTenant) {
+      toast.error("Please select a tenant")
+      setSubmitting(false)
+      return
+    }
+    const period =
+      formData.period_start && formData.period_end
+        ? `${formData.period_start} to ${formData.period_end}`
+        : formData.period_start || null
     const { error } = await supabase.from("payments").insert({
       tenant_id: formData.tenant_id,
+      tenant_name: selectedTenant.full_name,
+      unit: selectedTenant.unit_name,
+      property_id: selectedTenant.property_id,
       amount: Number(formData.amount),
       type: formData.type,
-      period_start: formData.period_start,
-      period_end: formData.period_end,
+      period,
       method: formData.method,
+      date: formData.period_start || new Date().toISOString().split("T")[0],
       notes: formData.notes || null,
       status: "pending",
     })
@@ -274,8 +286,7 @@ export default function PaymentsPage() {
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                 >
                   <option value="rent">Rent</option>
-                  <option value="utility">Utility</option>
-                  <option value="combined">Combined</option>
+                  <option value="levy">Levy</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -324,7 +335,8 @@ export default function PaymentsPage() {
                   onChange={(e) => setFormData({ ...formData, method: e.target.value })}
                 >
                   <option value="paystack">Paystack</option>
-                  <option value="offline">Offline</option>
+                  <option value="cash">Cash</option>
+                  <option value="bank transfer">Bank Transfer</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -455,9 +467,7 @@ export default function PaymentsPage() {
                   const unit = payment.tenants?.units?.name || "—"
                   const isApproving = approvingId === payment.id
                   const isRejecting = rejectingId === payment.id
-                  const period = payment.period_start
-                    ? `${new Date(payment.period_start).toLocaleDateString("en-GB", { month: "short", year: "numeric" })} - ${new Date(payment.period_end).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`
-                    : "—"
+                  const period = payment.period || "—"
                   const date = new Date(payment.created_at).toLocaleDateString("en-GB", {
                     day: "2-digit",
                     month: "short",

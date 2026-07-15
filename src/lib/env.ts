@@ -1,6 +1,6 @@
 export function getEnv(key: string): string {
   const value = process.env[key]
-  if (!value) {
+  if (value === undefined) {
     if (process.env.NODE_ENV === "production") {
       console.warn(`[Env] Missing environment variable: ${key}`)
     }
@@ -36,13 +36,8 @@ export const env = {
   vapidPrivateKey: getEnv("VAPID_PRIVATE_KEY"),
   ebulkSmsUsername: getEnv("EBULK_SMS_USERNAME"),
   ebulkSmsApiKey: getEnv("EBULK_SMS_API_KEY"),
-  smtpHost: getEnv("SMTP_HOST"),
-  smtpPort: getEnv("SMTP_PORT"),
-  smtpUser: getEnv("SMTP_USER"),
-  smtpPass: getEnv("SMTP_PASS"),
-  smtpFrom: getEnv("SMTP_FROM"),
   resendApiKey: getEnv("RESEND_API_KEY"),
-  emailFrom: getEnv("EMAIL_FROM") || "Pierresteve Residence <noreply@vanniejay.com.ng>",
+  emailFrom: getEnv("EMAIL_FROM") || "PrinceSteve Residence <noreply@vanniejay.com.ng>",
 }
 
 const requiredEnvVars = [
@@ -53,10 +48,13 @@ const requiredEnvVars = [
 ] as const
 
 const optionalEnvVars = [
-  "EBULK_SMS_USERNAME",
   "EBULK_SMS_API_KEY",
+  "EBULK_SMS_USERNAME",
   "SMS_WEBHOOK_API_KEY",
   "RESEND_API_KEY",
+  "EMAIL_FROM",
+  "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+  "VAPID_PRIVATE_KEY",
 ] as const
 
 export function validateEnv(): void {

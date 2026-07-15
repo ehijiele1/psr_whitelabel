@@ -29,10 +29,10 @@ export default function LoginPage() {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single()
 
-    const adminRoles = ["landlord", "owner", "admin", "manager", "caretaker"]
+    const adminRoles = ["landlord", "caretaker"]
 
     if (profile && adminRoles.includes(profile.role)) {
       router.push("/dashboard")

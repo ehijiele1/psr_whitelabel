@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { Loader2 } from "lucide-react"
 import { Building2, Users, TrendingUp, Clock } from "lucide-react"
 import KpiCard from "@/components/dashboard/kpi-card"
 import RevenueChart from "@/components/dashboard/revenue-chart"
@@ -26,9 +27,11 @@ export default function LandlordDashboard() {
   })
   const [revenueData, setRevenueData] = useState<{ month: string; revenue: number }[]>([])
   const [occupancyData, setOccupancyData] = useState<{ name: string; value: number; color: string }[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!activePropertyId) return
+    setLoading(true)
 
     const supabase = createClient()
     ;(async () => {
@@ -85,6 +88,7 @@ export default function LandlordDashboard() {
         { name: "Occupied", value: occupiedCount || 0, color: "#1e3a5f" },
         { name: "Vacant", value: Math.max(0, (unitsCount || 0) - (occupiedCount || 0)), color: "#e2e6ee" },
       ])
+      setLoading(false)
     })()
   }, [activePropertyId])
 
@@ -98,6 +102,14 @@ export default function LandlordDashboard() {
             Please select a property from the header to view your dashboard statistics and reports.
           </p>
         </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }

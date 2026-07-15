@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { motion } from "framer-motion"
+import { Loader2 } from "lucide-react"
 import { Home, Receipt, Ticket, User, Calendar, CreditCard, History } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import KpiCard from "@/components/dashboard/kpi-card"
@@ -14,15 +15,16 @@ interface TenantInfo {
   property_id: string
   unit_name: string
   property_name: string
-  rent_amount: number
-  tenancy_start: string
-  tenancy_end: string
+  rent: number
+  lease_start: string
+  lease_end: string
   status: string
 }
 
 export default function TenantDashboard() {
   const [tenant, setTenant] = useState<TenantInfo | null>(null)
   const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     totalPaid: 0,
     pendingAmount: 0,
@@ -51,16 +53,16 @@ export default function TenantDashboard() {
       property_id: tenantProps.id,
       unit_name: tenantUnits.name,
       property_name: tenantProps.name,
-      rent_amount: tenantUnits.monthly_rent,
-      tenancy_start: tenantData.tenancy_start,
-      tenancy_end: tenantData.tenancy_end,
+      rent: tenantUnits.monthly_rent,
+      lease_start: tenantData.lease_start,
+      lease_end: tenantData.lease_end,
       status: tenantData.status,
     })
 
     supabase
       .from("profiles")
       .select("email")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single()
       .then(({ data: profileData }) => {
         if (profileData) setEmail(profileData.email || "")
@@ -90,12 +92,21 @@ export default function TenantDashboard() {
       pendingAmount: pending,
       openTickets: ticketCount || 0,
     })
+    setLoading(false)
   }, [])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData().then(() => {})
   }, [fetchData])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   if (!tenant) {
     return (
@@ -129,7 +140,7 @@ export default function TenantDashboard() {
         />
         <KpiCard
           title="Monthly Rent"
-          value={tenant.rent_amount}
+          value={tenant.rent}
           prefix="₦"
           icon={<Receipt className="w-5 h-5" />}
           delay={0.05}
@@ -161,11 +172,11 @@ export default function TenantDashboard() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Start:</span>{" "}
-                <span className="font-medium">{new Date(tenant.tenancy_start).toLocaleDateString()}</span>
+                <span className="font-medium">{new Date(tenant.lease_start).toLocaleDateString()}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">End:</span>{" "}
-                <span className="font-medium">{new Date(tenant.tenancy_end).toLocaleDateString()}</span>
+                <span className="font-medium">{new Date(tenant.lease_end).toLocaleDateString()}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Status:</span>{" "}
@@ -184,12 +195,12 @@ export default function TenantDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Pay your monthly rent of {new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(tenant.rent_amount)} securely via Paystack.
+              Pay your monthly rent of {new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(tenant.rent)} securely via Paystack.
             </p>
             <PayRentDialog
               tenantId={tenant.id}
               propertyId={tenant.property_id}
-              rentAmount={tenant.rent_amount}
+              rentAmount={tenant.rent}
               email={email}
               onSuccess={fetchData}
             />
