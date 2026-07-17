@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 
 import { Badge } from "@/components/ui/badge"
 import { createClient } from "@/lib/supabase/browser"
-import { formatCurrency } from "@/lib/paystack"
+import { formatCurrency } from "@/lib/paystack-client"
 import { Loader2 } from "lucide-react"
 
 interface Payment {

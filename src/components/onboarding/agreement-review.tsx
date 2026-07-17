@@ -41,6 +41,7 @@ const today = new Date().toLocaleDateString("en-GB", {
 
 export default function AgreementReview({ data, onChange }: AgreementReviewProps) {
   const [expanded, setExpanded] = useState(false)
+  const paymentMethod = data.agreement.paymentMethod || "online"
 
   const tenantName = data.personalInfo.fullName || "[Tenant Name]"
   const guarantorName = data.additionalInfo.guarantorName || "[Guarantor Name]"
@@ -54,7 +55,7 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
     : "[Move-In Date]"
   const rentAmount = data.agreement.rentAmount || "[Rent Amount]"
   const securityDeposit = data.agreement.securityDeposit || "[Security Deposit]"
-  const termDuration = data.agreement.termDuration || "[Term]"
+  const termDuration = data.agreement.termDuration || "1 year"
 
   return (
     <motion.div
@@ -162,17 +163,17 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
                 placeholder="e.g. 500000"
                 value={data.agreement.securityDeposit}
                 onChange={(e) => onChange({ securityDeposit: e.target.value })}
-                className="border-emerald-300 dark:border-emerald-700 focus-visible:ring-emerald-500"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Term Duration</Label>
-              <Input
-                placeholder="e.g. 1 year"
-                value={data.agreement.termDuration}
-                onChange={(e) => onChange({ termDuration: e.target.value })}
-                className="border-emerald-300 dark:border-emerald-700 focus-visible:ring-emerald-500"
-              />
+              className="border-emerald-300 dark:border-emerald-700 focus-visible:ring-emerald-500"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Term Duration</Label>
+            <Input
+              placeholder="e.g. 1 year"
+              value={data.agreement.termDuration || "1 year"}
+              onChange={(e) => onChange({ termDuration: e.target.value })}
+              className="border-emerald-300 dark:border-emerald-700 focus-visible:ring-emerald-500"
+            />
             </div>
           </div>
         </div>
@@ -187,7 +188,7 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
               type="button"
               onClick={() => onChange({ paymentMethod: "online" })}
               className={`flex-1 p-4 rounded-lg border text-sm text-center transition-colors ${
-                data.agreement.paymentMethod === "online"
+                paymentMethod === "online"
                   ? "border-primary bg-primary/5 text-primary font-medium"
                   : "border-input hover:border-primary/50"
               }`}
@@ -199,7 +200,7 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
               type="button"
               onClick={() => onChange({ paymentMethod: "offline" })}
               className={`flex-1 p-4 rounded-lg border text-sm text-center transition-colors ${
-                data.agreement.paymentMethod === "offline"
+                paymentMethod === "offline"
                   ? "border-primary bg-primary/5 text-primary font-medium"
                   : "border-input hover:border-primary/50"
               }`}

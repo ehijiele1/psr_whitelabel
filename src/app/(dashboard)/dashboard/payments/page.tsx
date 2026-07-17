@@ -13,7 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger
 } from "@/components/ui/dialog"
 import { staggerContainer, staggerItem } from "@/lib/animations"
-import { formatCurrency } from "@/lib/paystack"
+import { formatCurrency } from "@/lib/paystack-client"
 import { createClient } from "@/lib/supabase/browser"
 import { toast } from "sonner"
 

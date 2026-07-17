@@ -17,6 +17,9 @@ const csp = [
   `frame-src https://js.paystack.co`,
   `base-uri 'self'`,
   `form-action 'self'`,
+  `frame-ancestors 'none'`,
+  `object-src 'none'`,
+  `upgrade-insecure-requests`,
 ]
 
 export default withPWA({

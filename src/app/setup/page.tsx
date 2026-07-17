@@ -27,7 +27,7 @@ export default function SetupPage() {
   const [done, setDone] = useState(false)
 
   const [account, setAccount] = useState({ fullName: "", email: "", phone: "", password: "" })
-  const [property, setProperty] = useState({ name: "", address: "", type: "" })
+  const [property, setProperty] = useState<{ name: string; address: string; type: string; rentCollection: "automatic" | "manual" }>({ name: "", address: "", type: "", rentCollection: "automatic" })
   const [unitGroups, setUnitGroups] = useState<UnitGroup[]>(getDefaultGroups())
 
   useEffect(() => {

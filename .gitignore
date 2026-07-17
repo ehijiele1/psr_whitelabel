@@ -17,6 +17,8 @@ build/
 
 # Vercel
 .vercel
+vercel_prod.env
+vercel_pulled.env
 
 # Debug
 npm-debug.log*

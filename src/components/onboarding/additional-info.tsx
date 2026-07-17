@@ -34,6 +34,7 @@ const genderOptions = ["Male", "Female"]
 const maritalOptions = ["Single", "Married", "Divorced", "Widowed"]
 
 export default function AdditionalInfo({ data, onChange }: AdditionalInfoProps) {
+  const numOcc = data.numOccupants || "1"
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -248,8 +249,8 @@ export default function AdditionalInfo({ data, onChange }: AdditionalInfoProps) 
               type="number"
               min="1"
               placeholder="1"
-              value={data.numOccupants}
-              onChange={(e) => onChange({ numOccupants: e.target.value })}
+              value={numOcc}
+              onChange={(e) => onChange({ numOccupants: e.target.value || "1" })}
             />
           </div>
         </div>

@@ -10,7 +10,8 @@
       "Bash(curl *)",
       "Bash(npx tsc *)",
       "Bash(git push *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(xargs grep -l \"dangerouslySetInnerHTML\")"
     ]
   }
 }

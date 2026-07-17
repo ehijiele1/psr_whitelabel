@@ -12,7 +12,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { initPaystackPayment, formatCurrency } from "@/lib/paystack"
+import { initPaystackPayment, formatCurrency } from "@/lib/paystack-client"
 
 interface PayRentDialogProps {
   tenantId: string

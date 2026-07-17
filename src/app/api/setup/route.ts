@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
         address: property.address,
         landlord_id: ownerId,
         status: "active",
+        rent_collection: property.rentCollection || "automatic",
       })
       .select("id")
       .single()

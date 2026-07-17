@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import RevenueChart from "@/components/dashboard/revenue-chart"
 import { createClient } from "@/lib/supabase/browser"
-import { formatCurrency } from "@/lib/paystack"
+import { formatCurrency } from "@/lib/paystack-client"
 
 interface Stats {
   totalRevenue: number

@@ -154,7 +154,7 @@ export default function ReviewSign({ data, onSignatureChange }: ReviewSignProps)
               <input
                 type="text"
                 placeholder="Type your full name as signature"
-                value={data.agreement.signature}
+                value={data.agreement.signature || data.personalInfo.fullName}
                 onChange={(e) => onSignatureChange(e.target.value)}
                 className="w-full h-16 rounded-lg border border-input bg-background px-4 text-xl font-[cursive] tracking-wider shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />

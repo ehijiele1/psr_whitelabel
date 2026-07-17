@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { createPlan, listPlans } from '@/lib/paystack'
+import { createPlan, listPlans } from '@/lib/paystack-server'
 
 export async function GET() {
   try {

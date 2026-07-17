@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { initializeSubscription, disableSubscription, enableSubscription } from '@/lib/paystack'
+import { initializeSubscription, disableSubscription, enableSubscription } from '@/lib/paystack-server'
 import { requireRole } from '@/lib/auth/require-role';
 
 export async function POST(req: NextRequest) {
