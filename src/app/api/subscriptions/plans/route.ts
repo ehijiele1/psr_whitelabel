@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { createPlan, listPlans } from '@/lib/paystack-server'
+import { requireRole } from '@/lib/auth/require-role';
 
 export async function GET() {
   try {
@@ -22,9 +23,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRole(['landlord']);
+    if (!auth.ok) return auth.response;
+    const user = auth.user;
     const supabase = await createAdminClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { property_id, name, amount, interval } = await req.json();
 

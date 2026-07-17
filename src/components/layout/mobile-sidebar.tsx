@@ -73,7 +73,7 @@ export default function MobileSidebar({ open, onOpenChange }: MobileSidebarProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="p-0 w-64">
+      <SheetContent side="left" className="p-0 w-64 bg-sidebar-background text-sidebar-foreground">
         <SheetHeader className="px-4 h-16 border-b flex items-center justify-start">
           <SheetTitle>
             <Logo />

@@ -141,7 +141,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const displayName = profile?.fullName || "User"
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 shrink-0">
+    <header className="sticky top-0 z-30 flex min-h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 shrink-0">
       <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
         <Menu className="h-5 w-5" />
       </Button>
@@ -151,13 +151,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
           Welcome back,
           <span className="text-foreground font-semibold"> {displayName}</span>
         </h2>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground hidden sm:block">
           Here&apos;s what&apos;s happening at your properties today.
         </p>
       </div>
 
       <div className="flex items-center gap-2">
-        <PropertySelector />
+        <div className="hidden md:block">
+          <PropertySelector />
+        </div>
         <ThemeToggle />
 
         <DropdownMenu>
