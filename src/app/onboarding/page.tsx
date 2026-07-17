@@ -249,7 +249,7 @@ export default function OnboardingPage() {
                 >
                   {data.step > step.num ? <Check className="h-4 w-4" /> : step.num}
                 </div>
-                <span className={`text-xs mt-1.5 ${data.step === step.num ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                <span className={`text-xs mt-1.5 hidden sm:inline ${data.step === step.num ? "font-medium text-foreground" : "text-muted-foreground"}`}>
                   {step.label}
                 </span>
               </div>

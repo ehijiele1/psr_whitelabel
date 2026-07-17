@@ -16,7 +16,7 @@ export default function PropertySelector() {
       <Select
         value={activePropertyId ?? ""}
         onChange={(e) => setActivePropertyId(e.target.value)}
-        className="w-[200px] h-9"
+        className="w-full max-w-[200px] h-9"
       >
         <option value="">Select Property</option>
         {properties.map((p) => (

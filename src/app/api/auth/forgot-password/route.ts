@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/server"
 import { sendEmail } from "@/lib/emails/email"
+import { env } from "@/lib/env"
 
 export async function POST(req: Request) {
   try {
@@ -14,13 +15,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email format" }, { status: 400 })
     }
 
+    const redirectTo = `${env.appUrl}/auth/callback?next=/reset-password`
+
     const admin = await createAdminClient()
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback?next=/reset-password`,
-      },
+      options: { redirectTo },
     })
 
     if (error || !data?.properties?.action_link) {
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
 
     const resetLink = data.properties.action_link
 
-    await sendEmail({
+    const result = await sendEmail({
       to: email,
       subject: "Reset your PrinceSteve Residence password",
       html: `
@@ -59,6 +60,10 @@ export async function POST(req: Request) {
         </div>
       `,
     })
+
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error || "Failed to send email" }, { status: 500 })
+    }
 
     return NextResponse.json({ ok: true })
   } catch {

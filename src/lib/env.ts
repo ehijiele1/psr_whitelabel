@@ -53,8 +53,10 @@ const optionalEnvVars = [
   "SMS_WEBHOOK_API_KEY",
   "RESEND_API_KEY",
   "EMAIL_FROM",
+  "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
   "VAPID_PRIVATE_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
 ] as const
 
 export function validateEnv(): void {

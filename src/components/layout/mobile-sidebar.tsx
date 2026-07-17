@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
@@ -14,12 +15,14 @@ import {
   Settings,
   Shield,
   FileText,
+  Home,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import Logo from "./logo"
+import { createClient } from "@/lib/supabase/browser"
 
-const navItems = [
+const adminNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Properties", href: "/dashboard/properties", icon: Building2 },
   { label: "Tenants", href: "/dashboard/tenants", icon: Users },
@@ -32,6 +35,14 @@ const navItems = [
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
+const tenantNavItems = [
+  { label: "Dashboard", href: "/dashboard", icon: Home },
+  { label: "Payments", href: "/dashboard/payments", icon: Receipt },
+  { label: "Tickets", href: "/dashboard/tickets", icon: Ticket },
+  { label: "Messages", href: "/dashboard/messages", icon: MessageSquare },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
+]
+
 interface MobileSidebarProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -39,6 +50,26 @@ interface MobileSidebarProps {
 
 export default function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const pathname = usePathname()
+  const [role, setRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single()
+      setRole(profile?.role || null)
+    }
+    fetchRole()
+  }, [])
+
+  const adminRoles = ["landlord", "caretaker"]
+  const isAdmin = role && adminRoles.includes(role)
+  const navItems = role ? (isAdmin ? adminNavItems : tenantNavItems) : []
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -60,7 +91,7 @@ export default function MobileSidebar({ open, onOpenChange }: MobileSidebarProps
                 <motion.div
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent/50"

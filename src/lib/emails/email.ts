@@ -17,7 +17,7 @@ function getResend() {
   return resend;
 }
 
-export async function sendEmail(payload: EmailPayload) {
+export async function sendEmail(payload: EmailPayload): Promise<{ ok: boolean; error?: string }> {
   const client = getResend();
 
   if (client) {
@@ -45,6 +45,9 @@ export async function sendEmail(payload: EmailPayload) {
     retry_count: 0,
   });
   if (queueError) console.error('[Email] Queue error:', queueError);
+
+  if (!client) return { ok: false, error: 'RESEND_API_KEY not configured' };
+  return { ok: true };
 }
 
 export async function sendEmailViaEdge(...args: unknown[]) {

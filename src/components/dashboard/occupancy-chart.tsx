@@ -55,7 +55,7 @@ export default function OccupancyChart({ data }: OccupancyChartProps) {
           {total === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No units yet</p>
           ) : (
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
               <ChartContainer config={chartConfig} className="w-40 h-40">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>

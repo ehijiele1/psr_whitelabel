@@ -98,7 +98,7 @@ export default function Sidebar() {
                 whileHover={{ x: 2 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative",
+                  "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors relative",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
