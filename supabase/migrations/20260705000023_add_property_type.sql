@@ -1,8 +1,8 @@
 -- PrinceSteve Residence Migration 23: Add type column to properties
 -- Also add ON DELETE CASCADE on property_id foreign keys for clean deletion
 
-ALTER TABLE properties ADD COLUMN IF NOT EXISTS type text NOT NULL DEFAULT 'Residential'
-  CONSTRAINT check_property_type CHECK (type IN ('Residential', 'Commercial', 'Mixed'));
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS type text
+  CONSTRAINT check_property_type CHECK (type IS NULL OR type IN ('Residential', 'Commercial', 'Mixed'));
 
 -- Drop existing FK constraints and re-add with CASCADE
 ALTER TABLE units
@@ -83,3 +83,8 @@ ALTER TABLE invitations
   DROP CONSTRAINT IF EXISTS invitations_unit_id_fkey,
   ADD CONSTRAINT invitations_unit_id_fkey
     FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE SET NULL;
+
+-- Allow landlords to update profiles (required when approving applications)
+DROP POLICY IF EXISTS "Landlord updates profiles" ON profiles;
+CREATE POLICY "Landlord updates profiles" ON profiles
+  FOR UPDATE USING (get_my_role() = 'landlord');

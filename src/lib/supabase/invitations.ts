@@ -94,21 +94,27 @@ export async function createInvitation(data: {
   const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/invite?token=${token}`
 
   if (data.email) {
-    const { data: emailData } = await supabase.from("email_queue").insert({
-      to: data.email,
-      subject: "You're Invited! Join PrinceSteve Residence",
-      html: `
-        <div style="font-family: sans-serif; color: #333;">
-          <h2>Welcome to PrinceSteve Residence!</h2>
-          <p>Dear ${data.full_name || "Tenant"},</p>
-          <p>You have been invited to register for your tenant account.</p>
-          <p><a href="${inviteUrl}">Click here to complete your registration</a></p>
-          <p>This link expires in 7 days.</p>
-        </div>
-      `,
-      status: "pending",
-      created_at: new Date().toISOString(),
-    })
+    try {
+      await fetch("/api/emails/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: data.email,
+          subject: "You're Invited! Join PrinceSteve Residence",
+          html: `
+            <div style="font-family: sans-serif; color: #333;">
+              <h2>Welcome to PrinceSteve Residence!</h2>
+              <p>Dear ${data.full_name || "Tenant"},</p>
+              <p>You have been invited to register for your tenant account.</p>
+              <p><a href="${inviteUrl}">Click here to complete your registration</a></p>
+              <p>This link expires in 7 days.</p>
+            </div>
+          `,
+        }),
+      })
+    } catch {
+      console.warn("[Invitations] Failed to queue invitation email")
+    }
   }
 
   await sendInviteSms(data.phone, data.full_name || "Tenant", inviteUrl)

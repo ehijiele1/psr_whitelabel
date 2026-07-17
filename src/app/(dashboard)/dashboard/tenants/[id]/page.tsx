@@ -275,7 +275,7 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
                 <CardContent className="p-6 space-y-4">
                   <div>
                     <h3 className="font-semibold mb-3">Tenancy Details</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div><span className="text-muted-foreground">Property</span><p className="font-medium">{property.name || "-"}</p></div>
                       <div><span className="text-muted-foreground">Unit</span><p className="font-medium">{unit.name || "-"}</p></div>
                       <div><span className="text-muted-foreground">Rent Amount</span><p className="font-medium">{formatCurrency(tenant.rent || 0)}/month</p></div>
@@ -284,7 +284,7 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
                       <div><span className="text-muted-foreground">Lease End</span><p className="font-medium">{formatDate(tenant.lease_end)}</p></div>
                       <div><span className="text-muted-foreground">Status</span><p className="font-medium capitalize">{tenant.status}</p></div>
                       {tenant.notes && (
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
                           <span className="text-muted-foreground">Notes</span>
                           <p className="font-medium mt-0.5">{tenant.notes}</p>
                         </div>
@@ -294,7 +294,7 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
                   <Separator />
                   <div>
                     <h3 className="font-semibold mb-3">Contact Information</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div><span className="text-muted-foreground">Email</span><p className="font-medium">{profile.email || "-"}</p></div>
                       <div><span className="text-muted-foreground">Phone</span><p className="font-medium">{profile.phone || "-"}</p></div>
                     </div>

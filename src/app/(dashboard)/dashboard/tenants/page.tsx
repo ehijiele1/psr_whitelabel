@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useCallback } from "react"
-import { Search, MoreHorizontal, Plus, Pencil, Trash2, Send, UserPlus, Users } from "lucide-react"
+import { Search, MoreHorizontal, Plus, Pencil, Trash2, Send, UserPlus, Users, Building2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -50,7 +50,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function TenantsPage() {
-  const { activePropertyId } = useProperty()
+  const { activePropertyId, setActivePropertyId, properties } = useProperty()
   const supabase = createClient()
   const router = useRouter()
 
@@ -146,8 +146,29 @@ export default function TenantsPage() {
           <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold">No Property Selected</h3>
           <p className="text-sm text-muted-foreground mt-2">
-            Please select a property from the header to manage your tenants.
+            {properties.length === 0
+              ? "You need to create a property before adding tenants."
+              : "Select a property to manage its tenants."}
           </p>
+          {properties.length > 0 ? (
+            <div className="mt-4 space-y-2">
+              {properties.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setActivePropertyId(p.id)}
+                  className="w-full text-left px-3 py-2 rounded-lg border border-input text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <Button className="mt-4" onClick={() => router.push("/dashboard/properties")}>
+              <Building2 className="h-4 w-4 mr-2" />
+              Create Property
+            </Button>
+          )}
         </div>
       </div>
     )
@@ -522,7 +543,7 @@ function TenantDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[95vw] sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Tenant" : "Add Tenant"}</DialogTitle>
           <DialogDescription>
@@ -601,7 +622,7 @@ function TenantDialog({
                       required
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Email</Label>
                       <Input
@@ -705,7 +726,7 @@ function TenantDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Tenancy Start</Label>
               <Input
@@ -760,7 +781,7 @@ function DeleteDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="w-[95vw] sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Delete Tenant</DialogTitle>
           <DialogDescription>
