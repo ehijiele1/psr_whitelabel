@@ -6,6 +6,7 @@ import Header from "@/components/layout/header"
 import MobileSidebar from "@/components/layout/mobile-sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { PropertyProvider } from "@/contexts/PropertyContext"
+import SessionTimeout from "@/components/auth/session-timeout"
 
 export default function DashboardLayout({
   children,
@@ -20,6 +21,7 @@ export default function DashboardLayout({
         <div className="flex h-screen overflow-hidden">
           <Sidebar />
           <MobileSidebar open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen} />
+          <SessionTimeout />
           <div className="flex flex-1 flex-col min-w-0">
             <Header onMenuClick={() => setMobileSidebarOpen(true)} />
             <main className="flex-1 overflow-y-auto">
