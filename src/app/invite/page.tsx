@@ -71,12 +71,6 @@ function InviteContent() {
 
     const supabase = createClient()
 
-    const email = invitation.email || `${invitation.phone}@
-      return
-    }
-
-    const supabase = createClient()
-
     const email = invitation.email || `${invitation.phone}@invite.princessteve.app`
     const { error: authError } = await supabase.auth.signUp({
       email,
