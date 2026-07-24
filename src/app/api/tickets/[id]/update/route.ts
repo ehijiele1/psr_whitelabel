@@ -30,7 +30,7 @@ export async function POST(
 
     const supabase = await createAdminClient();
 
-    const updateData: Record<string, string }> = { status };
+    const updateData: Record<string, string> = { status };
     if (status === 'resolved') {
       updateData.resolved_by = auth.user.id;
     }
