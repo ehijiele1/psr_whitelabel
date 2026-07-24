@@ -71,6 +71,6 @@ export function getIP(req: NextRequest): string {
   const trueClientIP = req.headers.get('true-client-ip')
   if (trueClientIP) return trueClientIP
 
-  // Fallback to connection remote address
-  return req.socket.remoteAddress ?? 'unknown'
+  // If no headers, return unknown
+  return 'unknown'
 }
