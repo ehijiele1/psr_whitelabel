@@ -35,7 +35,7 @@ export default function LoginPage() {
       if (authError) throw authError
 
       // Get the user from the response
-      const { data: { user } } = data
+      const user = data.user
       if (!user) throw new Error('No user returned')
 
       // Check if email is confirmed (for email sign-in)
