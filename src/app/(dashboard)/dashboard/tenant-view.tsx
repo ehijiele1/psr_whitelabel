@@ -32,67 +32,77 @@ export default function TenantDashboard() {
   })
 
   const fetchData = useCallback(async () => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('No user')
 
-    const { data: tenantData, error: tenantError } = await supabase
-      .from("tenants")
-      .select("*, units!inner(id, name, monthly_rent), properties!inner(id, name)")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .maybeSingle()
+      const { data: tenantData, error: tenantError } = await supabase
+        .from("tenants")
+        .select("*, units!inner(id, name, monthly_rent), properties!inner(id, name)")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle()
 
-    if (tenantError || !tenantData) return
+      if (tenantError) throw tenantError
+      if (!tenantData) {
+        // No tenant data; keep tenant as null
+        return
+      }
 
-    const tenantProps = tenantData.properties as { id: string; name: string }
-    const tenantUnits = tenantData.units as { id: string; name: string; monthly_rent: number }
+      const tenantProps = tenantData.properties as { id: string; name: string }
+      const tenantUnits = tenantData.units as { id: string; name: string; monthly_rent: number }
 
-    setTenant({
-      id: tenantData.id,
-      property_id: tenantProps.id,
-      unit_name: tenantUnits.name,
-      property_name: tenantProps.name,
-      rent: tenantUnits.monthly_rent,
-      lease_start: tenantData.lease_start,
-      lease_end: tenantData.lease_end,
-      status: tenantData.status,
-    })
-
-    supabase
-      .from("profiles")
-      .select("email")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data: profileData }) => {
-        if (profileData) setEmail(profileData.email || "")
+      setTenant({
+        id: tenantData.id,
+        property_id: tenantProps.id,
+        unit_name: tenantUnits.name,
+        property_name: tenantProps.name,
+        rent: tenantUnits.monthly_rent,
+        lease_start: tenantData.lease_start,
+        lease_end: tenantData.lease_end,
+        status: tenantData.status,
       })
 
-    const { data: payments } = await supabase
-      .from("payments")
-      .select("amount, status")
-      .eq("tenant_id", tenantData.id)
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("user_id", user.id)
+        .single()
+      if (profileData) {
+        setEmail(profileData.email || "")
+      }
 
-    const paid = (payments || [])
-      .filter((p) => p.status === "approved")
-      .reduce((s, p) => s + (p.amount || 0), 0)
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("amount, status")
+        .eq("tenant_id", tenantData.id)
 
-    const pending = (payments || [])
-      .filter((p) => p.status !== "approved")
-      .reduce((s, p) => s + (p.amount || 0), 0)
+      const paid = (payments || [])
+        .filter((p) => p.status === "approved")
+        .reduce((s, p) => s + (p.amount || 0), 0)
 
-    const { count: ticketCount } = await supabase
-      .from("tickets")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", tenantData.id)
-      .neq("status", "closed")
+      const pending = (payments || [])
+        .filter((p) => p.status !== "approved")
+        .reduce((s, p) => s + (p.amount || 0), 0)
 
-    setStats({
-      totalPaid: paid,
-      pendingAmount: pending,
-      openTickets: ticketCount || 0,
-    })
-    setLoading(false)
+      const { count: ticketCount } = await supabase
+        .from("tickets")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantData.id)
+        .neq("status", "closed")
+
+      setStats({
+        totalPaid: paid,
+        pendingAmount: pending,
+        openTickets: ticketCount || 0,
+      })
+    } catch (err) {
+      console.error('Failed to fetch tenant dashboard data:', err)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -191,8 +201,8 @@ export default function TenantDashboard() {
             <CardTitle className="flex items-center gap-2 text-base">
               <CreditCard className="w-4 h-4" />
               Pay Rent
-            </CardTitle>
-          </CardHeader>
+            </Title>
+          </Header>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Pay your monthly rent of {new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(tenant.rent)} securely via Paystack.
@@ -204,20 +214,20 @@ export default function TenantDashboard() {
               email={email}
               onSuccess={fetchData}
             />
-          </CardContent>
+          </Content>
         </Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
+        <Header>
+          <Title className="flex items-center gap-2 text-base">
             <History className="w-4 h-4" />
             Payment History
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+          </Title>
+        </Header>
+        <Content className="p-0">
           <PaymentHistory tenantId={tenant.id} />
-        </CardContent>
+        </Content>
       </Card>
     </motion.div>
   )

@@ -35,60 +35,65 @@ export default function LandlordDashboard() {
 
     const supabase = createClient()
     ;(async () => {
-      const responses = await Promise.allSettled([
-        supabase.from("properties").select("id", { count: "exact", head: true }),
-        supabase.from("tenants").select("id", { count: "exact", head: true }).eq("status", "active").eq("property_id", activePropertyId),
-        supabase.from("units").select("id", { count: "exact", head: true }).eq("property_id", activePropertyId),
-        supabase.from("units").select("id", { count: "exact", head: true }).eq("status", "occupied").eq("property_id", activePropertyId),
-        supabase.from("payments").select("amount, created_at").eq("status", "approved").eq("property_id", activePropertyId),
-        supabase.from("payments").select("amount").neq("status", "approved").eq("property_id", activePropertyId),
-      ])
+      try {
+        const responses = await Promise.allSettled([
+          supabase.from("properties").select("id", { count: "exact", head: true }),
+          supabase.from("tenants").select("id", { count: "exact", head: true }).eq("status", "active").eq("property_id", activePropertyId),
+          supabase.from("units").select("id", { count: "exact", head: true }).eq("property_id", activePropertyId),
+          supabase.from("units").select("id", { count: "exact", head: true }).eq("status", "occupied").eq("property_id", activePropertyId),
+          supabase.from("payments").select("amount, created_at").eq("status", "approved").eq("property_id", activePropertyId),
+          supabase.from("payments").select("amount").neq("status", "approved").eq("property_id", activePropertyId),
+        ])
 
-      const getCount = (res: PromiseSettledResult<{ count: number | null }>) =>
-        res.status === "fulfilled" ? res.value.count || 0 : 0
-      const getData = (res: PromiseSettledResult<{ data: unknown[] | null }>) =>
-        res.status === "fulfilled" ? res.value.data || [] : []
+        const getCount = (res: PromiseSettledResult<{ count: number | null }>) =>
+          res.status === "fulfilled" ? res.value.count || 0 : 0
+        const getData = (res: PromiseSettledResult<{ data: unknown[] | null }>) =>
+          res.status === "fulfilled" ? res.value.data || [] : []
 
-      const propertiesCount = getCount(responses[0])
-      const tenantsCount = getCount(responses[1])
-      const unitsCount = getCount(responses[2])
-      const occupiedCount = getCount(responses[3])
-      const approvedPayments = getData(responses[4]) as { amount: number; created_at: string }[]
-      const pendingData = getData(responses[5]) as { amount: number }[]
+        const propertiesCount = getCount(responses[0])
+        const tenantsCount = getCount(responses[1])
+        const unitsCount = getCount(responses[2])
+        const occupiedCount = getCount(responses[3])
+        const approvedPayments = getData(responses[4]) as { amount: number; created_at: string }[]
+        const pendingData = getData(responses[5]) as { amount: number }[]
 
-      const revenue = (approvedPayments || []).reduce((sum: number, p: { amount: number }) => sum + (p.amount || 0), 0)
-      const pending = (pendingData || []).reduce((sum: number, p: { amount: number }) => sum + (p.amount || 0), 0)
+        const revenue = (approvedPayments || []).reduce((sum: number, p: { amount: number }) => sum + (p.amount || 0), 0)
+        const pending = (pendingData || []).reduce((sum: number, p: { amount: number }) => sum + (p.amount || 0), 0)
 
-      setStats({
-        totalProperties: propertiesCount || 0,
-        activeTenants: tenantsCount || 0,
-        totalRevenue: revenue,
-        pendingPayments: pending,
-        totalUnits: unitsCount || 0,
-        occupiedUnits: occupiedCount || 0,
-      })
+        setStats({
+          totalProperties: propertiesCount || 0,
+          activeTenants: tenantsCount || 0,
+          totalRevenue: revenue,
+          pendingPayments: pending,
+          totalUnits: unitsCount || 0,
+          occupiedUnits: occupiedCount || 0,
+        })
 
-      const monthlyRevenue: Record<string, number> = {}
-      for (const p of approvedPayments || []) {
-        if (p.created_at) {
-          const d = new Date(p.created_at)
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-          monthlyRevenue[key] = (monthlyRevenue[key] || 0) + (p.amount || 0)
+        const monthlyRevenue: Record<string, number> = {}
+        for (const p of approvedPayments || []) {
+          if (p.created_at) {
+            const d = new Date(p.created_at)
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+            monthlyRevenue[key] = (monthlyRevenue[key] || 0) + (p.amount || 0)
+          }
         }
-      }
-      const now = new Date()
-      const chartData = Array.from({ length: 6 }, (_, i) => {
-        const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-        return { month: MONTHS[d.getMonth()], revenue: monthlyRevenue[key] || 0 }
-      })
-      setRevenueData(chartData)
+        const now = new Date()
+        const chartData = Array.from({ length: 6 }, (_, i) => {
+          const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+          return { month: MONTHS[d.getMonth()], revenue: monthlyRevenue[key] || 0 }
+        })
+        setRevenueData(chartData)
 
-      setOccupancyData([
-        { name: "Occupied", value: occupiedCount || 0, color: "#1e3a5f" },
-        { name: "Vacant", value: Math.max(0, (unitsCount || 0) - (occupiedCount || 0)), color: "#e2e6ee" },
-      ])
-      setLoading(false)
+        setOccupancyData([
+          { name: "Occupied", value: occupiedCount || 0, color: "#1e3a5f" },
+          { name: "Vacant", value: Math.max(0, (unitsCount || 0) - (occupiedCount || 0)), color: "#e2e6ee" },
+        ])
+      } catch (err) {
+        console.error('Failed to fetch landlord dashboard data:', err)
+      } finally {
+        setLoading(false)
+      }
     })()
   }, [activePropertyId])
 
