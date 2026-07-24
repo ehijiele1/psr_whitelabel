@@ -5,7 +5,7 @@ import { csrfProtection } from '@/lib/csrf';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string> } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Apply CSRF protection
   const csrfResult = await csrfProtection(req);
@@ -30,7 +30,7 @@ export async function POST(
 
     const supabase = await createAdminClient();
 
-    const updateData: Record<string, string> = { status };
+    const updateData: Record<string, string }> = { status };
     if (status === 'resolved') {
       updateData.resolved_by = auth.user.id;
     }

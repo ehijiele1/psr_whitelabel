@@ -43,10 +43,6 @@ export default function LoginPage() {
         throw new Error('Please verify your email before logging in. Check your inbox for the verification link.')
       }
 
-      // Check if email is confirmed
-      if (!user.email_confirmed_at) {
-        throw new Error('Please verify your email before logging in. Check your inbox for the verification link.')
-      }
 
       // Fetch the profile
       const { data: profile, error: profileError } = await supabase
@@ -198,7 +194,7 @@ export default function LoginPage() {
               {loading ? "Sending OTP..." : "Send OTP"}
             </Button>
           </form>
-        )>
+        )}
 
         <p className="text-center text-xs text-muted-foreground">
           <Link href="/register" className="text-primary hover:underline font-medium">
