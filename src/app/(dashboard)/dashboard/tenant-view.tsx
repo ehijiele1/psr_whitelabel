@@ -201,8 +201,8 @@ export default function TenantDashboard() {
             <CardTitle className="flex items-center gap-2 text-base">
               <CreditCard className="w-4 h-4" />
               Pay Rent
-            </Title>
-          </Header>
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Pay your monthly rent of {new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(tenant.rent)} securely via Paystack.
@@ -214,20 +214,20 @@ export default function TenantDashboard() {
               email={email}
               onSuccess={fetchData}
             />
-          </Content>
+          </CardContent>
         </Card>
       </div>
 
       <Card>
-        <Header>
-          <Title className="flex items-center gap-2 text-base">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
             <History className="w-4 h-4" />
             Payment History
-          </Title>
-        </Header>
-        <Content className="p-0">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
           <PaymentHistory tenantId={tenant.id} />
-        </Content>
+        </CardContent>
       </Card>
     </motion.div>
   )
