@@ -71,6 +71,12 @@ function InviteContent() {
 
     const supabase = createClient()
 
+    const email = invitation.email || `${invitation.phone}@
+      return
+    }
+
+    const supabase = createClient()
+
     const email = invitation.email || `${invitation.phone}@invite.princessteve.app`
     const { error: authError } = await supabase.auth.signUp({
       email,
@@ -174,52 +180,32 @@ function InviteContent() {
 
         <form onSubmit={handleRegister} className="space-y-4 bg-card border rounded-xl p-6 shadow-sm">
           <div className="p-4 rounded-lg bg-muted/50 text-sm space-y-1">
-            <p><span className="text-muted-foreground">Name:</span> {invitation.full_name}</p>
-            <p><span className="text-muted-foreground">Phone:</span> {invitation.phone || "—"}</p>
-            {invitation.email && <p><span className="text-muted-foreground">Email:</span> {invitation.email}</p>}
-            <p><span className="text-muted-foreground">Role:</span> <span className="capitalize">{invitation.role.replace("_", " ")}</span></p>
+            <p><span>Email:</span> {invitation.email ?? 'Not provided'}</p>
+            <p><span>Phone:</span> {invitation.phone ?? 'Not provided'}</p>
+            <p><span>Role:</span> {invitation.role}</p>
           </div>
 
-          {Array.isArray(invitation.payment_history) && invitation.payment_history.length > 0 && (
-            <div className="p-4 rounded-lg border text-sm">
-              <p className="font-medium mb-2">Existing Payment History</p>
-              {(invitation.payment_history as { date: string; amount: number }[]).map((p, i) => (
-                <div key={i} className="flex justify-between text-xs py-1 border-b last:border-0">
-                  <span>{p.date}</span>
-                  <span className="font-medium">₦{Number(p.amount).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
           <div className="space-y-2">
-            <Label htmlFor="password">Create Password</Label>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
-              placeholder="At least 6 characters"
+              placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+              className="mb-2"
             />
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            After registration, please review and update your personal details.
-          </p>
-
           <Button type="submit" className="w-full" disabled={registering}>
-            {registering ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Setting up account...</>
-            ) : (
-              "Accept Invitation & Register"
-            )}
+            {registering ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+            {registering ? "Creating Account..." : "Create Account"}
           </Button>
         </form>
       </motion.div>
-    </div>
-  )
+      </div>
+    )
 }
 
 export default function InvitePage() {
@@ -231,5 +217,5 @@ export default function InvitePage() {
     }>
       <InviteContent />
     </Suspense>
-  )
+  );
 }

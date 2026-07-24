@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Loader2, CheckCircle } from "lucide-react"
@@ -100,8 +100,12 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <div>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
       <VerifyContent />
-    </div>
-  )
+    </Suspense>
+  );
 }
