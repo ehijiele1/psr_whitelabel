@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import ThemeToggle from "@/components/ui/theme-toggle"
-import { createClient } from "@/lib/supabase/browser"
 import Logo from "@/components/layout/logo"
+import { createClient } from "@/lib/supabase/browser"
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"email" | "phone">("email")
@@ -21,27 +21,6 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const router = useRouter()
 
-  const redirectByRole = async () => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single()
-
-    const adminRoles = ["landlord", "caretaker"]
-
-    if (profile && adminRoles.includes(profile.role)) {
-      router.push("/dashboard")
-    } else {
-      router.push("/dashboard")
-    }
-    router.refresh()
-  }
-
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -49,14 +28,43 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       if (authError) throw authError
-      await redirectByRole()
+
+      // Get the user from the response
+      const { data: { user } } = data
+      if (!user) throw new Error('No user returned')
+
+      // Check if email is confirmed (for email sign-in)
+      if (!user.email_confirmed_at) {
+        throw new Error('Please verify your email before logging in. Check your inbox for the verification link.')
+      }
+
+      // Check if email is confirmed
+      if (!user.email_confirmed_at) {
+        throw new Error('Please verify your email before logging in. Check your inbox for the verification link.')
+      }
+
+      // Fetch the profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single()
+      if (profileError) throw profileError
+
+      const adminRoles = ['landlord', 'caretaker']
+      if (profile && adminRoles.includes(profile.role)) {
+        router.push('/dashboard')
+      } else {
+        router.push('/dashboard')
+      }
+      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed")
+      setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -190,7 +198,7 @@ export default function LoginPage() {
               {loading ? "Sending OTP..." : "Send OTP"}
             </Button>
           </form>
-        )}
+        )>
 
         <p className="text-center text-xs text-muted-foreground">
           <Link href="/register" className="text-primary hover:underline font-medium">

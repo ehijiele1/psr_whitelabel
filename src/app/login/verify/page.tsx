@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Loader2, CheckCircle } from "lucide-react"
@@ -18,49 +18,40 @@ function VerifyContent() {
   const [otp, setOtp] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [verified, setVerified] = useState(false)
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+    try {
+      const supabase = createClient()
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        phone,
+        token: otp,
+        type: "sms",
+      })
+      if (verifyError) throw verifyError
+      const user = data.user
+      if (!user) throw new Error('No user returned')
 
-    const supabase = createClient()
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      phone,
-      token: otp,
-      type: "sms",
-    })
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single()
+      if (profileError) throw profileError
 
-    setLoading(false)
-
-    if (verifyError) {
-      setError(verifyError.message)
-      return
+      const adminRoles = ['landlord', 'caretaker']
+      if (profile && adminRoles.includes(profile.role)) {
+        router.push('/dashboard')
+      } else {
+        router.push('/dashboard')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification failed')
+    } finally {
+      setLoading(false)
     }
-
-    setVerified(true)
-  }
-
-  if (verified) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full text-center space-y-4"
-        >
-          <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center mx-auto">
-            <CheckCircle className="h-8 w-8 text-emerald-600 dark:text-emerald-100" />
-          </div>
-          <h1 className="text-2xl font-bold">Verified!</h1>
-          <p className="text-sm text-muted-foreground">You have been signed in successfully.</p>
-          <Button onClick={() => router.push("/dashboard")} className="mt-4">
-            Go to Dashboard
-          </Button>
-        </motion.div>
-      </div>
-    )
   }
 
   return (
@@ -109,8 +100,8 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={null}>
+    <div>
       <VerifyContent />
-    </Suspense>
+    </div>
   )
 }

@@ -1,9 +1,16 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
+import { rateLimit, getIP } from "@/lib/rateLimiter"
 
 const WEBHOOK_API_KEY = process.env.SMS_WEBHOOK_API_KEY || ""
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 5 requests per minute per IP
+    const ip = getIP(request)
+    if (!rateLimit(ip, 5, 60_000)) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 })
+    }
+
     const apiKey = request.headers.get("x-api-key")
     if (!apiKey || apiKey !== WEBHOOK_API_KEY) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

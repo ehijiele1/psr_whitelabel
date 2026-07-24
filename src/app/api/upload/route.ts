@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/require-role';
+import { csrfProtection } from '@/lib/csrf';
 
 export async function POST(req: NextRequest) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const auth = await requireRole(['landlord', 'caretaker', 'tenant', 'applicant']);
     if (!auth.ok) return auth.response;

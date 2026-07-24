@@ -11,7 +11,9 @@
       "Bash(npx tsc *)",
       "Bash(git push *)",
       "Bash(git config *)",
-      "Bash(xargs grep -l \"dangerouslySetInnerHTML\")"
+      "Bash(xargs grep -l \"dangerouslySetInnerHTML\")",
+      "Bash(node *)",
+      "Bash(git add *)"
     ]
   }
 }

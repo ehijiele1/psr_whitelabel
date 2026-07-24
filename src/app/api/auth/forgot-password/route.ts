@@ -1,9 +1,16 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
+import { rateLimit, getIP } from "@/lib/rateLimiter"
 import { createAdminClient } from "@/lib/supabase/server"
 import { sendEmail } from "@/lib/emails/email"
 import { env } from "@/lib/env"
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Rate limiting: 5 requests per minute per IP (prevent email spam)
+  const ip = getIP(req)
+  if (!rateLimit(ip, 5, 60_000)) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 })
+  }
+
   try {
     const { email } = await req.json()
     if (!email || typeof email !== "string") {

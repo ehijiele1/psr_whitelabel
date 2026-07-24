@@ -33,7 +33,7 @@ export default function RegisterPage() {
     setLoading(true)
 
     const supabase = createClient()
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -42,6 +42,8 @@ export default function RegisterPage() {
           phone: form.phone,
           role: "applicant",
         },
+        // This will trigger a confirmation email to be sent
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       },
     })
 
@@ -53,7 +55,16 @@ export default function RegisterPage() {
       return
     }
 
-    router.push("/onboarding")
+    // Show success message and instruct user to check email
+    // We don't redirect immediately - user needs to verify email first
+    setError("Check your email for a verification link. Please verify your email before logging in.")
+    // Clear form for security
+    setForm({
+      fullName: "",
+      email: "",
+      phone: "",
+      password: "",
+    })
   }
 
   return (
