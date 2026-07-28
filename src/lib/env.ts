@@ -2,9 +2,23 @@ export function getEnv(key: string): string {
   const value = process.env[key]
   if (value === undefined) {
     if (process.env.NODE_ENV === "production") {
-      console.warn(`[Env] Missing environment variable: ${key}`)
+      throw new Error(`[Env] Missing required environment variable: ${key}. Application cannot start.`)
     }
+    // In development, log a warning but return empty string for non-critical paths
+    console.warn(`[Env] Missing environment variable: ${key}`)
     return ""
+  }
+  return value
+}
+
+/**
+ * Get an environment variable, throwing an error if missing (even in development)
+ * Use this for variables that are always required
+ */
+export function getRequiredEnv(key: string): string {
+  const value = process.env[key]
+  if (value === undefined) {
+    throw new Error(`[Env] Missing required environment variable: ${key}. Application cannot start.`)
   }
   return value
 }
@@ -26,18 +40,30 @@ export function getPublicEnv(key: string): string {
 }
 
 export const env = {
-  appUrl: getEnv("NEXT_PUBLIC_APP_URL") || "http://localhost:3000",
-  supabaseUrl: getEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  supabaseAnonKey: getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  // Required in all environments
+  appUrl: getRequiredEnv("NEXT_PUBLIC_APP_URL"),
+  supabaseUrl: getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
+  supabaseAnonKey: getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  
+  // Required in production, warn in development
   supabaseServiceRoleKey: getEnv("SUPABASE_SERVICE_ROLE_KEY"),
   paystackPublicKey: getEnv("NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY"),
   paystackSecretKey: getEnv("PAYSTACK_SECRET_KEY"),
+  
+  // Optional but recommended
   vapidPublicKey: getEnv("NEXT_PUBLIC_VAPID_PUBLIC_KEY"),
   vapidPrivateKey: getEnv("VAPID_PRIVATE_KEY"),
   ebulkSmsUsername: getEnv("EBULK_SMS_USERNAME"),
   ebulkSmsApiKey: getEnv("EBULK_SMS_API_KEY"),
   resendApiKey: getEnv("RESEND_API_KEY"),
   emailFrom: getEnv("EMAIL_FROM") || "PrinceSteve Residence <noreply@vanniejay.com.ng>",
+  
+  // Upstash Redis for rate limiting (optional but recommended for production)
+  upstashRedisRestUrl: getEnv("UPSTASH_REDIS_REST_URL"),
+  upstashRedisRestToken: getEnv("UPSTASH_REDIS_REST_TOKEN"),
+  
+  // CSRF secret (required in production)
+  csrfSecret: getEnv("CSRF_SECRET"),
 }
 
 const requiredEnvVars = [
@@ -70,15 +96,19 @@ export function validateEnv(): void {
   }
 
   if (missing.length > 0) {
-    console.error(
-      `Missing required environment variables:\n  ${missing.join("\n  ")}\n\n` +
+    const message = `Missing required environment variables:\n  ${missing.join("\n  ")}\n\n` +
       "Please check your .env.local file."
-    )
+    
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(message)
+    }
+    
+    console.error(message)
   }
 
   for (const key of optionalEnvVars) {
     if (!process.env[key]) {
-      console.warn(`Optional environment variable "${key}" is not set.`)
+      console.warn(`[Env] Optional environment variable "${key}" is not set.`)
     }
   }
 }

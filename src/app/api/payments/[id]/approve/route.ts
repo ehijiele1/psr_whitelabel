@@ -1,17 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/clientFactory';
 import { requireRole } from '@/lib/auth/require-role';
+import { csrfProtection } from '@/lib/csrf';
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const auth = await requireRole(['landlord']);
     if (!auth.ok) return auth.response;
 
     const { id } = await params;
-    const supabase = await createAdminClient();
+    const supabase = await createClient();
+
+    // First, verify the payment belongs to the landlord's property
+    const { data: paymentCheck, error: checkError } = await supabase
+      .from('payments')
+      .select('id, property_id')
+      .eq('id', id)
+      .single();
+
+    if (checkError) {
+      console.error('[Payment Approve] Check failed:', checkError);
+      return NextResponse.json({ error: checkError.message }, { status: 500 });
+    }
+
+    if (!paymentCheck) {
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+    }
+
+    // Verify landlord owns the property
+    if (paymentCheck.property_id !== auth.user.property_id) {
+      return NextResponse.json({ error: 'Unauthorized - Payment does not belong to your property' }, { status: 403 });
+    }
 
     const { data: payment, error } = await supabase
       .from('payments')

@@ -47,3 +47,8 @@ public/workbox-*.js.map
 
 # Temp files
 log.txt
+
+.env*.local
+
+# Husky generated files (do not commit the .husky/_ internal directory)
+.husky/_/

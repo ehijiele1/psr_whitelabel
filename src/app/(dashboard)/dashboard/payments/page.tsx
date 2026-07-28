@@ -121,9 +121,9 @@ export default function PaymentsPage() {
           }))
         )
       }
-      } catch {
-        toast.error("Failed to load payments")
-      }
+    } catch {
+      toast.error("Failed to load payments")
+    }
   }, [supabase])
 
   useEffect(() => {

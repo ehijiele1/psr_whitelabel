@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server"
 import type { User } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/clientFactory"
 
 export type AllowedRole = "landlord" | "caretaker" | "tenant" | "applicant"
 
+// Extended user type with profile data
+export interface AuthUser extends User {
+  role: string
+  property_id?: string
+}
+
 export type AuthResult =
-  | { ok: true; user: User; role: string }
+  | { ok: true; user: AuthUser; role: string }
   | { ok: false; response: NextResponse }
 
 export async function requireRole(allowedRoles: AllowedRole[]): Promise<AuthResult> {
@@ -24,7 +30,7 @@ export async function requireRole(allowedRoles: AllowedRole[]): Promise<AuthResu
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, property_id")
     .eq("user_id", user.id)
     .single()
 
@@ -37,5 +43,12 @@ export async function requireRole(allowedRoles: AllowedRole[]): Promise<AuthResu
     }
   }
 
-  return { ok: true, user, role }
+  // Extend user with profile data
+  const authUser: AuthUser = {
+    ...user,
+    role,
+    property_id: profile?.property_id,
+  }
+
+  return { ok: true, user: authUser, role }
 }

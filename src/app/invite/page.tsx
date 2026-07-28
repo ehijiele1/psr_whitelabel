@@ -153,10 +153,10 @@ function InviteContent() {
     )
   }
 
-    if (!invitation) return null
+  if (!invitation) return null
 
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
@@ -198,8 +198,8 @@ function InviteContent() {
           </Button>
         </form>
       </motion.div>
-      </div>
-    )
+    </div>
+  )
 }
 
 export default function InvitePage() {

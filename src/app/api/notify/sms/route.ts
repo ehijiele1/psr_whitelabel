@@ -5,6 +5,7 @@ import {
   sendAgreementSigned,
 } from '@/lib/notifications/sms'
 import { requireRole } from '@/lib/auth/require-role';
+import { csrfProtection } from '@/lib/csrf';
 
 type SmsAction = 'application-received' | 'payment-confirmed' | 'agreement-signed';
 
@@ -15,6 +16,15 @@ const ACTION_MAP: Record<SmsAction, (phone: string, name: string) => Promise<{ s
 };
 
 export async function POST(req: NextRequest) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const auth = await requireRole(['landlord', 'caretaker']);
     if (!auth.ok) return auth.response;

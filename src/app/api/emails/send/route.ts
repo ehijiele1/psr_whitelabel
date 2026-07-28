@@ -1,29 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/clientFactory';
 import { requireRole } from '@/lib/auth/require-role';
+import { emailSendSchema, validateSchema } from '@/lib/schemas';
+import { csrfProtection } from '@/lib/csrf';
 
 export async function POST(req: NextRequest) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const auth = await requireRole(['landlord', 'caretaker']);
     if (!auth.ok) return auth.response;
 
     const body = await req.json();
-    const { to, subject, html, text } = body;
-
-    if (!to || !subject || (!html && !text)) {
-      return NextResponse.json(
-        { error: 'Missing required fields: to, subject, and html or text' },
-        { status: 400 }
-      );
+    
+    // Validate using Zod schema
+    const validation = validateSchema(emailSendSchema, body);
+    if (!validation.success || !validation.data) {
+      return NextResponse.json({ error: validation.error || 'Invalid data' }, { status: 400 });
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (typeof to !== 'string' || !emailPattern.test(to)) {
-      return NextResponse.json({ error: 'Invalid recipient email' }, { status: 400 });
-    }
+    const { to, subject, html, text } = validation.data;
 
-    // Attempt to send via Supabase email_queue
-    const supabase = await createAdminClient();
+    // Use regular client with RLS - email_queue should have proper RLS policies
+    const supabase = await createClient();
     const { error } = await supabase.from('email_queue').insert({
       to,
       subject,
@@ -31,6 +37,7 @@ export async function POST(req: NextRequest) {
       text_body: text || html?.replace(/<[^>]*>/g, '') || '',
       status: 'pending',
       created_at: new Date().toISOString(),
+      created_by: auth.user.id,
     });
 
     if (error) {

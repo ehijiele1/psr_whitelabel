@@ -1,7 +1,9 @@
 import { env } from "@/lib/env"
+import { fetchWithRetry } from "@/lib/fetch"
 
 const EBULK_API_URL = "https://api.ebulksms.com/v2/sms/send"
 const SENDER = "PrinceSteve"
+const SMS_TIMEOUT = 10000 // 10 seconds
 
 async function sendSms(
   phone: string,
@@ -23,23 +25,35 @@ async function sendSms(
   }
 
   try {
-    const response = await fetch(EBULK_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({
-        username: env.ebulkSmsUsername,
-        apikey: env.ebulkSmsApiKey,
-        sender: SENDER,
-        message,
-        recipients: [normalizedPhone],
-      }),
-    })
+    const response = await fetchWithRetry(
+      EBULK_API_URL,
+      {
+        method: "POST",
+        timeout: SMS_TIMEOUT,
+        maxRetries: 3,
+        retryDelay: 1000,
+        headers: { 
+          "Content-Type": "application/json", 
+          "Accept": "application/json" 
+        },
+        body: JSON.stringify({
+          username: env.ebulkSmsUsername,
+          apikey: env.ebulkSmsApiKey,
+          sender: SENDER,
+          message,
+          recipients: [normalizedPhone],
+        }),
+      }
+    )
 
     const result = await response.json()
 
     if (!response.ok) {
       console.error("[SMS] API error:", result)
-      return { success: false, error: result?.error || result?.message || `HTTP ${response.status}` }
+      return { 
+        success: false, 
+        error: result?.error || result?.message || `HTTP ${response.status}` 
+      }
     }
 
     return { success: true }

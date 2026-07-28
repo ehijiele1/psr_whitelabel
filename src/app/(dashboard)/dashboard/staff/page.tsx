@@ -143,9 +143,9 @@ export default function StaffPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Staff Management</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage caretaker accounts.
-              </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage caretaker accounts.
+          </p>
         </div>
         {canManage && (
           <Button onClick={() => setDialogOpen(true)}>
@@ -180,9 +180,9 @@ export default function StaffPage() {
           <div className="p-12 text-center">
             <Shield className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
             <p className="font-medium">No staff accounts yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Add caretaker accounts above.
-              </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Add caretaker accounts above.
+            </p>
           </div>
         ) : (
           <div className="divide-y">

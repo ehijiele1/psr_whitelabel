@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/clientFactory';
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
 
   const signature = req.headers.get('x-paystack-signature');
-  const secret    = process.env.PAYSTACK_SECRET_KEY;
+  const secret = process.env.PAYSTACK_SECRET_KEY;
 
-  if (!secret || !signature) {
-    return NextResponse.json({ error: 'Missing credentials' }, { status: 401 });
+  if (!secret) {
+    console.error('[Paystack Webhook] PAYSTACK_SECRET_KEY not configured');
+    return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+  }
+
+  if (!signature) {
+    console.error('[Paystack Webhook] Missing signature header');
+    return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
   }
 
   const hash = crypto
@@ -20,7 +26,7 @@ export async function POST(req: NextRequest) {
   const hashBuf = Buffer.from(hash);
   const sigBuf = Buffer.from(signature);
   if (hashBuf.length !== sigBuf.length || !crypto.timingSafeEqual(hashBuf, sigBuf)) {
-    console.error('[Paystack Webhook] Signature mismatch');
+    console.error('[Paystack Webhook] Signature mismatch - possible tampering attempt');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
@@ -28,11 +34,15 @@ export async function POST(req: NextRequest) {
   try {
     event = JSON.parse(body);
   } catch {
+    console.error('[Paystack Webhook] Invalid JSON payload');
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
   const { event: eventType, data } = event;
-    const supabase = await createAdminClient();
+
+  // Use admin client for webhook - this is one of the few places where admin client is justified
+  // because webhooks need to bypass RLS to update records based on external events
+  const supabase = await createAdminClient();
 
   // ── charge.success ────────────────────────────────────────────
   if (eventType === 'charge.success') {

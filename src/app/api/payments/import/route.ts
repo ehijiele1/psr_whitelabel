@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/clientFactory';
 import { requireRole } from '@/lib/auth/require-role';
+import { paymentsImportSchema, validateSchema } from '@/lib/schemas';
+import { csrfProtection } from '@/lib/csrf';
 
 interface ImportRow {
   tenant_name: string;
@@ -16,79 +18,86 @@ interface ImportRow {
 }
 
 export async function POST(req: NextRequest) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const auth = await requireRole(['landlord']);
     if (!auth.ok) return auth.response;
 
-    const supabase = await createAdminClient();
+    // Use regular client with RLS - landlord should have proper permissions
+    const supabase = await createClient();
 
     const body = await req.json();
-    const records: ImportRow[] = body.records;
-
-    if (!Array.isArray(records) || records.length === 0) {
-      return NextResponse.json({ error: 'No records provided' }, { status: 400 });
+    
+    // Validate using Zod schema
+    const validation = validateSchema(paymentsImportSchema, body);
+    if (!validation.success || !validation.data) {
+      return NextResponse.json({ error: validation.error || 'Invalid data' }, { status: 400 });
     }
 
-    const validTypes = ['rent', 'levy'];
-    const validMethods = ['cash', 'bank transfer', 'paystack'];
-    const validStatuses = ['pending', 'approved', 'rejected'];
+    const records: ImportRow[] = validation.data.records;
     const errors: { row: number; error: string }[] = [];
     const inserted: { receipt_no: string | null; tenant_name: string; amount: number }[] = [];
 
-    for (let i = 0; i < records.length; i++) {
-      const r = records[i];
-      const row = i + 1;
-
-      if (!r.tenant_name?.trim()) { errors.push({ row, error: 'tenant_name is required' }); continue; }
-      if (!r.unit?.trim()) { errors.push({ row, error: 'unit is required' }); continue; }
-      if (!validTypes.includes(r.type)) { errors.push({ row, error: `type must be one of: ${validTypes.join(', ')}` }); continue; }
-      if (typeof r.amount !== 'number' || r.amount <= 0) { errors.push({ row, error: 'amount must be a positive number' }); continue; }
-      if (!validMethods.includes(r.method)) { errors.push({ row, error: `method must be one of: ${validMethods.join(', ')}` }); continue; }
-      if (!r.date) { errors.push({ row, error: 'date is required' }); continue; }
-
-      const dateObj = new Date(r.date);
-      if (isNaN(dateObj.getTime())) { errors.push({ row, error: 'date is not valid (use YYYY-MM-DD)' }); continue; }
-
-      if (r.status && !validStatuses.includes(r.status)) {
-        errors.push({ row, error: `status must be one of: ${validStatuses.join(', ')}` });
-        continue;
-      }
-    }
-
-    if (errors.length > 0) {
-      return NextResponse.json({ errors, insertedCount: 0, errorCount: errors.length }, { status: 422 });
-    }
-
+    // Validate all records first and collect valid ones
+    const validRecords: Array<ImportRow & { tenant_id: string; property_id: string }> = []
+    
     for (const r of records) {
       const { data: existingTenant } = await supabase
         .from('tenants')
         .select('id, property_id')
         .eq('unit', r.unit.trim())
+        .eq('property_id', auth.user.property_id) // Ensure tenant belongs to landlord's property
         .maybeSingle();
 
-      const { data, error } = await supabase
-        .from('payments')
-        .insert({
-          tenant_id: existingTenant?.id || undefined,
-          property_id: existingTenant?.property_id || undefined,
-          tenant_name: r.tenant_name.trim(),
-          unit: r.unit.trim(),
-          type: r.type,
-          amount: r.amount,
-          method: r.method,
-          date: r.date,
-          period: r.period?.trim() || null,
-          status: r.status || 'approved',
-          is_partial: r.is_partial || false,
-          notes: r.notes?.trim() || null,
-        })
-        .select('receipt_no, tenant_name, amount')
-        .single();
+      // Only allow import for tenants in the landlord's property
+      if (!existingTenant) {
+        errors.push({ row: errors.length + 1, error: `Tenant with unit ${r.unit} not found in your property` });
+        continue;
+      }
 
-      if (error) {
-        errors.push({ row: errors.length + 1, error: error.message });
-      } else if (data) {
-        inserted.push(data);
+      validRecords.push({
+        ...r,
+        tenant_id: existingTenant.id,
+        property_id: existingTenant.property_id,
+      })
+    }
+
+    // Use batch insert for atomicity - all records are inserted in a single operation
+    if (validRecords.length > 0) {
+      const paymentRecords = validRecords.map(r => ({
+        tenant_id: r.tenant_id,
+        property_id: r.property_id,
+        tenant_name: r.tenant_name.trim(),
+        unit: r.unit.trim(),
+        type: r.type,
+        amount: r.amount,
+        method: r.method,
+        date: r.date,
+        period: r.period?.trim() || null,
+        status: r.status || 'approved',
+        is_partial: r.is_partial || false,
+        notes: r.notes?.trim() || null,
+        created_by: auth.user.id,
+      }))
+
+      const { data: insertedData, error: batchError } = await supabase
+        .from('payments')
+        .insert(paymentRecords)
+        .select('receipt_no, tenant_name, amount')
+
+      if (batchError) {
+        // If batch insert fails, all records fail (atomic behavior)
+        errors.push({ row: 1, error: `Batch insert failed: ${batchError.message}` })
+      } else if (insertedData) {
+        inserted.push(...insertedData)
       }
     }
 
@@ -99,6 +108,7 @@ export async function POST(req: NextRequest) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (err) {
+    console.error('[Payments Import] Error:', err);
     return NextResponse.json({ error: (err as Error).message || 'Import failed' }, { status: 500 });
   }
 }

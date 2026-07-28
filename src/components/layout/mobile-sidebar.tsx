@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
@@ -20,7 +20,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import Logo from "./logo"
-import { createClient } from "@/lib/supabase/browser"
+import { useUserRole } from "@/contexts/RoleContext"
 
 const adminNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -50,26 +50,9 @@ interface MobileSidebarProps {
 
 export default function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const pathname = usePathname()
-  const [role, setRole] = useState<string | null>(null)
+  const { isLoading, isAdmin } = useUserRole()
 
-  useEffect(() => {
-    const fetchRole = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single()
-      setRole(profile?.role || null)
-    }
-    fetchRole()
-  }, [])
-
-  const adminRoles = ["landlord", "caretaker"]
-  const isAdmin = role && adminRoles.includes(role)
-  const navItems = role ? (isAdmin ? adminNavItems : tenantNavItems) : []
+  const navItems = isLoading ? [] : (isAdmin ? adminNavItems : tenantNavItems)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

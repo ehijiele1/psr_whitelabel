@@ -1,26 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/clientFactory';
 import { sendPushNotification } from '@/lib/push'
+import { pushSendSchema, validateSchema } from '@/lib/schemas'
+import { csrfProtection } from '@/lib/csrf'
 
 import type { PushSubscription } from 'web-push';
 
 interface SubscriptionRow {
-  subscription: PushSubscription;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
+/**
+ * Reconstruct a PushSubscription object from database columns
+ */
+function reconstructPushSubscription(row: SubscriptionRow): PushSubscription {
+  return {
+    endpoint: row.endpoint,
+    keys: {
+      p256dh: row.p256dh,
+      auth: row.auth,
+    },
+  };
 }
 
 export async function POST(req: NextRequest) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
-    const supabase = await createAdminClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, body, data: payloadData, userId } = await req.json();
-
-    if (!title || !body) {
-      return NextResponse.json({ error: 'title and body are required' }, { status: 400 });
+    const bodyData = await req.json();
+    
+    // Validate using Zod schema
+    const validation = validateSchema(pushSendSchema, bodyData);
+    if (!validation.success || !validation.data) {
+      return NextResponse.json({ error: validation.error || 'Invalid data' }, { status: 400 });
     }
+
+    const { title, body, data: payloadData, userId } = validation.data;
 
     if (userId && userId !== user.id) {
       const { data: requester } = await supabase
@@ -47,7 +77,7 @@ export async function POST(req: NextRequest) {
 
     const { data: subscriptions } = await supabase
       .from('push_subscriptions')
-      .select('subscription')
+      .select('endpoint, p256dh, auth')
       .eq('user_id', targetUserId);
 
     if (!subscriptions || subscriptions.length === 0) {
@@ -56,7 +86,7 @@ export async function POST(req: NextRequest) {
 
     const results = await Promise.allSettled(
       (subscriptions as SubscriptionRow[]).map((sub) =>
-        sendPushNotification(sub.subscription, {
+        sendPushNotification(reconstructPushSubscription(sub), {
           title,
           body,
           data: payloadData || {},
@@ -74,8 +104,8 @@ export async function POST(req: NextRequest) {
         await supabase
           .from('push_subscriptions')
           .delete()
-          .eq('endpoint', sub.subscription.endpoint);
-        expired.push(sub.subscription.endpoint);
+          .eq('endpoint', sub.endpoint);
+        expired.push(sub.endpoint);
       }
     }
 

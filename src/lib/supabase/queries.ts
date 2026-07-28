@@ -1,5 +1,6 @@
-import { createClient } from "./server"
-import { createClient as createBrowserClient } from "./browser"
+import { createClient, createBrowserClient } from "./clientFactory"
+import type { PaginationParams, PaginatedResponse } from "@/lib/pagination"
+import { paginatedQuery, parsePaginationParams } from "@/lib/pagination"
 
 export async function getUser() {
   const supabase = await createClient()
@@ -45,13 +46,23 @@ export async function isTenantRole(role: string | null): Promise<boolean> {
   return ["tenant"].includes(role)
 }
 
-export async function getProperties() {
+export async function getProperties(params?: PaginationParams): Promise<PaginatedResponse<any>> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("properties")
-    .select("*, units(count), tenants!inner(count)")
-    .order("created_at", { ascending: false })
-  return data || []
+  const paginationParams = params || parsePaginationParams({})
+  
+  return paginatedQuery(
+    supabase,
+    "properties",
+    "*, units(count), tenants!inner(count)",
+    paginationParams,
+    (query: any) => query.order("created_at", { ascending: false })
+  )
+}
+
+// Backward compatible version for existing code
+export async function getPropertiesLegacy() {
+  const result = await getProperties({ page: 1, pageSize: 1000 })
+  return result.data
 }
 
 export async function getProperty(id: string) {
@@ -64,13 +75,23 @@ export async function getProperty(id: string) {
   return data
 }
 
-export async function getTenants() {
+export async function getTenants(params?: PaginationParams): Promise<PaginatedResponse<any>> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("tenants")
-    .select("*, profiles(full_name, email, phone), units(name, monthly_rent), properties(name)")
-    .order("created_at", { ascending: false })
-  return data || []
+  const paginationParams = params || parsePaginationParams({})
+  
+  return paginatedQuery(
+    supabase,
+    "tenants",
+    "*, profiles(full_name, email, phone), units(name, monthly_rent), properties(name)",
+    paginationParams,
+    (query: any) => query.order("created_at", { ascending: false })
+  )
+}
+
+// Backward compatible version for existing code
+export async function getTenantsLegacy() {
+  const result = await getTenants({ page: 1, pageSize: 1000 })
+  return result.data
 }
 
 export async function getTenant(id: string) {
@@ -83,48 +104,86 @@ export async function getTenant(id: string) {
   return data
 }
 
-export async function getPayments() {
+export async function getPayments(params?: PaginationParams): Promise<PaginatedResponse<any>> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("payments")
-    .select("*, tenants!inner(profiles(full_name), units(name))")
-    .order("created_at", { ascending: false })
-  return data || []
+  const paginationParams = params || parsePaginationParams({})
+  
+  return paginatedQuery(
+    supabase,
+    "payments",
+    "*, tenants!inner(profiles(full_name), units(name))",
+    paginationParams,
+    (query: any) => query.order("created_at", { ascending: false })
+  )
 }
 
-export async function getTenantPayments(tenantId: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("payments")
-    .select("*, tenants!inner(profiles(full_name), units(name))")
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false })
-  return data || []
+// Backward compatible version for existing code
+export async function getPaymentsLegacy() {
+  const result = await getPayments({ page: 1, pageSize: 1000 })
+  return result.data
 }
 
-export async function getTenantTickets(tenantId: string) {
+export async function getTenantPayments(tenantId: string, params?: PaginationParams): Promise<PaginatedResponse<any>> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("tickets")
-    .select("*, units(name)")
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false })
-  return data || []
+  const paginationParams = params || parsePaginationParams({})
+  
+  return paginatedQuery(
+    supabase,
+    "payments",
+    "*, tenants!inner(profiles(full_name), units(name))",
+    paginationParams,
+    (query: any) => query.eq("tenant_id", tenantId).order("created_at", { ascending: false })
+  )
 }
 
-export async function getApplications() {
+// Backward compatible version for existing code
+export async function getTenantPaymentsLegacy(tenantId: string) {
+  const result = await getTenantPayments(tenantId, { page: 1, pageSize: 1000 })
+  return result.data
+}
+
+export async function getTenantTickets(tenantId: string, params?: PaginationParams): Promise<PaginatedResponse<any>> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("applications")
-    .select("*, profiles(full_name, email, phone)")
-    .order("submitted_at", { ascending: false })
-  return data || []
+  const paginationParams = params || parsePaginationParams({})
+  
+  return paginatedQuery(
+    supabase,
+    "tickets",
+    "*, units(name)",
+    paginationParams,
+    (query: any) => query.eq("tenant_id", tenantId).order("created_at", { ascending: false })
+  )
+}
+
+// Backward compatible version for existing code
+export async function getTenantTicketsLegacy(tenantId: string) {
+  const result = await getTenantTickets(tenantId, { page: 1, pageSize: 1000 })
+  return result.data
+}
+
+export async function getApplications(params?: PaginationParams): Promise<PaginatedResponse<any>> {
+  const supabase = await createClient()
+  const paginationParams = params || parsePaginationParams({})
+  
+  return paginatedQuery(
+    supabase,
+    "applications",
+    "*, profiles(full_name, email, phone)",
+    paginationParams,
+    (query: any) => query.order("submitted_at", { ascending: false })
+  )
+}
+
+// Backward compatible version for existing code
+export async function getApplicationsLegacy() {
+  const result = await getApplications({ page: 1, pageSize: 1000 })
+  return result.data
 }
 
 export async function submitApplication(
   formData: Record<string, unknown>
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = createBrowserClient()
+  const supabase = await createBrowserClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: "Not authenticated" }
 
@@ -156,11 +215,21 @@ export async function getDashboardStats() {
   }
 }
 
-export async function getInvitations() {
+export async function getInvitations(params?: PaginationParams): Promise<PaginatedResponse<any>> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("invitations")
-    .select("*, properties(name), units(name)")
-    .order("created_at", { ascending: false })
-  return data || []
+  const paginationParams = params || parsePaginationParams({})
+  
+  return paginatedQuery(
+    supabase,
+    "invitations",
+    "*, properties(name), units(name)",
+    paginationParams,
+    (query: any) => query.order("created_at", { ascending: false })
+  )
+}
+
+// Backward compatible version for existing code
+export async function getInvitationsLegacy() {
+  const result = await getInvitations({ page: 1, pageSize: 1000 })
+  return result.data
 }

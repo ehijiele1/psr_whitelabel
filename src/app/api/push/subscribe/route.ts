@@ -1,22 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/clientFactory';
+import { pushSubscribeSchema, validateSchema } from '@/lib/schemas';
+import { csrfProtection } from '@/lib/csrf';
 
 export async function POST(req: NextRequest) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
-    const supabase = await createAdminClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { subscription } = await req.json();
-    if (!subscription?.endpoint) {
-      return NextResponse.json({ error: 'Invalid subscription object' }, { status: 400 });
+    const bodyData = await req.json();
+    
+    // Validate using Zod schema
+    const validation = validateSchema(pushSubscribeSchema, bodyData);
+    if (!validation.success || !validation.data) {
+      return NextResponse.json({ error: validation.error || 'Invalid data' }, { status: 400 });
     }
 
+    const { subscription } = validation.data;
     const endpoint = subscription.endpoint;
-    const p256dh = subscription.keys?.p256dh || '';
-    const auth = subscription.keys?.auth || '';
+    const p256dh = subscription.keys.p256dh;
+    const auth = subscription.keys.auth;
 
     const { data: existing } = await supabase
       .from('push_subscriptions')
@@ -44,8 +59,17 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
-    const supabase = await createAdminClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

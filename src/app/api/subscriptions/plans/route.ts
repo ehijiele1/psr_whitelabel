@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/clientFactory';
 import { createPlan, listPlans } from '@/lib/paystack-server'
 import { requireRole } from '@/lib/auth/require-role';
+import { subscriptionPlanSchema, validateSchema } from '@/lib/schemas';
+import { csrfProtection } from '@/lib/csrf';
 
 export async function GET() {
   try {
-    const supabase = await createAdminClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -22,17 +24,30 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // Apply CSRF protection
+  const csrfResult = await csrfProtection(req);
+  if (!csrfResult.valid) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const auth = await requireRole(['landlord']);
     if (!auth.ok) return auth.response;
     const user = auth.user;
-    const supabase = await createAdminClient();
+    const supabase = await createClient();
 
-    const { property_id, name, amount, interval } = await req.json();
-
-    if (!property_id || !name || !amount || !interval) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const bodyData = await req.json();
+    
+    // Validate using Zod schema
+    const validation = validateSchema(subscriptionPlanSchema, bodyData);
+    if (!validation.success || !validation.data) {
+      return NextResponse.json({ error: validation.error || 'Invalid data' }, { status: 400 });
     }
+
+    const { property_id, name, amount, interval } = validation.data;
 
     const { data: property } = await supabase
       .from('properties')
@@ -57,6 +72,7 @@ export async function POST(req: NextRequest) {
         amount,
         interval,
         plan_code: paystackPlan.plan_code,
+        created_by: user.id,
       })
       .select()
       .single();

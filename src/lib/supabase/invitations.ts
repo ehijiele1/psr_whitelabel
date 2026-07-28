@@ -1,5 +1,22 @@
 import { createClient as createBrowserClient } from "./browser"
 import { sendInviteSms } from "@/lib/notifications/sms"
+import { randomBytes } from 'node:crypto'
+
+// HTML escape function to prevent XSS in email templates
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Generate cryptographically secure token
+function generateInvitationToken(): string {
+  const bytes = randomBytes(16).toString('base64url')
+  return `PSR-INV-${Date.now().toString(36)}-${bytes.slice(0, 8)}`
+}
 
 export async function getInvitationByToken(token: string) {
   const supabase = createBrowserClient()
@@ -66,20 +83,25 @@ export async function createInvitation(data: {
   const { data: user } = await supabase.auth.getUser()
   if (!user.user) return { success: false, error: "Not authenticated" }
 
-  const token = `PSR-INV-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+  // Generate cryptographically secure token
+  const token = generateInvitationToken()
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+
+  // Sanitize user input to prevent XSS
+  const sanitizedFullName = data.full_name ? escapeHtml(data.full_name) : "Tenant"
+  const sanitizedNotes = data.notes ? escapeHtml(data.notes) : null
 
   const { data: invitation, error } = await supabase
     .from("invitations")
     .insert({
       phone: data.phone,
       email: data.email,
-      full_name: data.full_name,
+      full_name: sanitizedFullName,
       unit_id: data.unit_id,
       property_id: data.property_id,
       role: data.role || "tenant",
       payment_history: data.payment_history || [],
-      notes: data.notes || null,
+      notes: sanitizedNotes,
       status: "pending",
       token,
       sent_at: new Date().toISOString(),
@@ -104,7 +126,7 @@ export async function createInvitation(data: {
           html: `
             <div style="font-family: sans-serif; color: #333;">
               <h2>Welcome to PrinceSteve Residence!</h2>
-              <p>Dear ${data.full_name || "Tenant"},</p>
+              <p>Dear ${sanitizedFullName},</p>
               <p>You have been invited to register for your tenant account.</p>
               <p><a href="${inviteUrl}">Click here to complete your registration</a></p>
               <p>This link expires in 7 days.</p>
@@ -117,7 +139,7 @@ export async function createInvitation(data: {
     }
   }
 
-  await sendInviteSms(data.phone, data.full_name || "Tenant", inviteUrl)
+  await sendInviteSms(data.phone, sanitizedFullName, inviteUrl)
 
   return { success: true, id: invitation.id, token }
 }

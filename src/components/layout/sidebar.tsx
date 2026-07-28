@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -21,7 +21,7 @@ import {
   Home,
   Shield,
 } from "lucide-react"
-import { createClient } from "@/lib/supabase/browser"
+import { useUserRole } from "@/contexts/RoleContext"
 import Logo from "./logo"
 
 const adminNavItems = [
@@ -47,29 +47,10 @@ const tenantNavItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
-  const [role, setRole] = useState<string | null>(null)
+  const { role, isLoading, isAdmin } = useUserRole()
   const pathname = usePathname()
 
-  useEffect(() => {
-    const fetchRole = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single()
-
-      setRole(profile?.role || null)
-    }
-    fetchRole()
-  }, [])
-
-  const adminRoles = ["landlord", "caretaker"]
-  const isAdmin = role && adminRoles.includes(role)
-  const navItems = role ? (isAdmin ? adminNavItems : tenantNavItems) : []
+  const navItems = isLoading ? [] : (isAdmin ? adminNavItems : tenantNavItems)
 
   return (
     <motion.aside

@@ -1,16 +1,21 @@
 import crypto from "crypto"
 import { NextRequest, NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createAdminClient } from "@/lib/supabase/clientFactory"
+import { setupSchema, validateSchema } from "@/lib/schemas"
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { account, property, unitGroups } = body
-
-    if (!account?.email || !account?.password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
+    
+    // Validate using Zod schema
+    const validation = validateSchema(setupSchema, body);
+    if (!validation.success || !validation.data) {
+      return NextResponse.json({ error: validation.error || 'Invalid data' }, { status: 400 });
     }
 
+    const { account, property, unitGroups } = validation.data;
+
+    // Use admin client for setup - this is justified as it needs to create the first user
     const admin = await createAdminClient()
 
     // Authorization: setup is only allowed when no landlord exists yet,
@@ -91,7 +96,7 @@ export async function POST(req: NextRequest) {
     const unitRows: Record<string, unknown>[] = []
     const chargeRows: Record<string, unknown>[] = []
 
-    for (const group of unitGroups) {
+    for (const group of unitGroups || []) {
       for (const unit of group.units) {
         if (!unit.monthlyRent || parseFloat(unit.monthlyRent) <= 0) continue
 

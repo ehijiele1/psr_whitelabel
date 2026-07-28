@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { csrfProtection } from '@/lib/csrf';
+import { createClient } from '@/lib/supabase/clientFactory';
+import { fileUploadSchema, validateFormData } from '@/lib/schemas';
 
 export async function POST(req: NextRequest) {
   // Apply CSRF protection
@@ -17,19 +19,30 @@ export async function POST(req: NextRequest) {
     if (!auth.ok) return auth.response;
 
     const formData = await req.formData();
-    const file = formData.get('file') as File | null;
-    const bucket = (formData.get('bucket') as string) || 'documents';
-    const folder = (formData.get('folder') as string) || '';
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    
+    // Validate form data using Zod schema
+    const validation = await validateFormData(fileUploadSchema, formData);
+    if (!validation.success || !validation.data) {
+      return NextResponse.json({ error: validation.error || 'Invalid form data' }, { status: 400 });
     }
 
-    const allowedBuckets = ['documents', 'photos', 'agreements'];
-    if (!allowedBuckets.includes(bucket)) {
-      return NextResponse.json({ error: 'Invalid bucket' }, { status: 400 });
-    }
+    const { file, bucket, folder } = validation.data;
 
+    // Role-based bucket access control
+    if (auth.user.role === 'tenant') {
+      // Tenants can only upload to their own folders in documents
+      if (bucket !== 'documents') {
+        return NextResponse.json({ error: 'Unauthorized bucket access' }, { status: 403 });
+      }
+    } else if (auth.user.role === 'caretaker') {
+      // Caretakers can upload to documents and photos
+      if (bucket === 'agreements') {
+        return NextResponse.json({ error: 'Unauthorized bucket access' }, { status: 403 });
+      }
+    }
+    // Landlords can upload to all buckets
+
+    // Additional validation (file type and size are already validated by Zod)
     const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
     if (!allowedMimes.includes(file.type)) {
       return NextResponse.json(
@@ -42,12 +55,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File too large. Max 10MB.' }, { status: 400 });
     }
 
-    const { createAdminClient } = await import('@/lib/supabase/server');
-    const supabase = await createAdminClient();
+    // Use regular client with RLS (not admin client)
+    const supabase = await createClient();
 
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const safeFolder = folder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\.{2,}/g, '').replace(/^\/+|\/+$/g, '');
+    const safeFolder = folder ? folder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\.{2,}/g, '').replace(/^\/+|\/+$/g, '') : '';
     const filePath = safeFolder ? `${safeFolder}/${timestamp}-${safeName}` : `${timestamp}-${safeName}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -67,7 +80,8 @@ export async function POST(req: NextRequest) {
       .from(bucket)
       .getPublicUrl(uploadData.path);
 
-    await supabase.from('files').insert({
+    // Insert file metadata with ownership
+    const { error: dbError } = await supabase.from('files').insert({
       file_name: file.name,
       file_type: file.type,
       file_size: file.size,
@@ -76,6 +90,12 @@ export async function POST(req: NextRequest) {
       is_base64: false,
       uploaded_by: auth.user.id,
     });
+
+    if (dbError) {
+      // If DB insert fails, try to clean up the uploaded file
+      await supabase.storage.from(bucket).remove([uploadData.path]);
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    }
 
     return NextResponse.json({
       url: publicUrl,
