@@ -6,7 +6,7 @@ import { Download } from "lucide-react"
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import RevenueChart from "@/components/dashboard/revenue-chart"
+import RevenueChart from "@/components/dashboard/revenue-chart-lazy"
 import { createClient } from "@/lib/supabase/browser"
 import { formatCurrency } from "@/lib/paystack-client"
 

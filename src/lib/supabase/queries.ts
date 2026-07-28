@@ -1,6 +1,7 @@
 import { createClient, createBrowserClient } from "./clientFactory"
 import type { PaginationParams, PaginatedResponse } from "@/lib/pagination"
 import { paginatedQuery, parsePaginationParams } from "@/lib/pagination"
+import { cache } from "react"
 
 export async function getUser() {
   const supabase = await createClient()
@@ -198,7 +199,13 @@ export async function submitApplication(
   return { success: true }
 }
 
-export async function getDashboardStats() {
+/**
+ * Dashboard statistics - per-request memoized via React cache().
+ * Within a single server render, multiple calls share one DB hit.
+ * Across requests, results are fresh (no stale data).
+ * For longer TTL caching across requests, use unstable_cache() in the route.
+ */
+export const getDashboardStats = cache(async () => {
   const supabase = await createClient()
   const [properties, tenants, payments] = await Promise.all([
     supabase.from("properties").select("id", { count: "exact", head: true }),
@@ -213,7 +220,7 @@ export async function getDashboardStats() {
     activeTenants: tenants.count || 0,
     totalRevenue,
   }
-}
+})
 
 export async function getInvitations(params?: PaginationParams): Promise<PaginatedResponse<any>> {
   const supabase = await createClient()
