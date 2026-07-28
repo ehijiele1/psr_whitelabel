@@ -13,7 +13,10 @@
       "Bash(git config *)",
       "Bash(xargs grep -l \"dangerouslySetInnerHTML\")",
       "Bash(node *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(vercel *)",
+      "Bash(npx husky *)"
     ]
   }
 }

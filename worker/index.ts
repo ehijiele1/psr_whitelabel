@@ -1,57 +1,75 @@
-// @ts-nocheck
 /// <reference lib="webworker" />
+/* eslint-disable @typescript-eslint/no-explicit-any, no-var */
 
-self.__WB_MANIFEST;
+const sw = self as unknown as ServiceWorkerGlobalScope
 
-self.addEventListener('push', (event) => {
-  if (!event.data) return;
+interface PushNotificationData {
+  title?: string
+  body?: string
+  icon?: string
+  badge?: string
+  tag?: string
+  vibrate?: number[]
+  data?: { url?: string; path?: string; [key: string]: unknown }
+  actions?: { action: string; title: string; icon?: string }[]
+}
+
+const DEFAULT_ICON = '/icons/icon-192.png'
+const DEFAULT_BADGE = '/icons/icon-96.png'
+const DEFAULT_TAG = 'psr-notification'
+const DEFAULT_VIBRATE: number[] = [200, 100, 200]
+
+;(sw as any).__WB_MANIFEST
+
+sw.addEventListener('push', (event: any) => {
+  if (!event.data) return
 
   try {
-    const data = event.data.json();
+    const data = event.data.json() as PushNotificationData
 
-    const options = {
+    const options: any = {
       body: data.body || '',
-      icon: data.icon || '/icons/icon-192.png',
-      badge: data.badge || '/icons/icon-96.png',
-      tag: data.tag || 'psr-notification',
-      vibrate: data.vibrate || [200, 100, 200],
-      data: data.data || {},
+      icon: data.icon || DEFAULT_ICON,
+      badge: data.badge || DEFAULT_BADGE,
+      tag: data.tag || DEFAULT_TAG,
+      vibrate: data.vibrate || DEFAULT_VIBRATE,
+      data: (data.data as any) || {},
       requireInteraction: true,
       actions: data.actions || [],
-    };
+    }
 
     event.waitUntil(
-      self.registration.showNotification(data.title || 'PrinceSteve Residence', options)
-    );
+      sw.registration.showNotification(data.title || 'PrinceSteve Residence', options)
+    )
   } catch {
-    const text = event.data.text();
+    const text = event.data.text()
     if (text) {
       event.waitUntil(
-        self.registration.showNotification('PrinceSteve Residence', { body: text })
-      );
+        sw.registration.showNotification('PrinceSteve Residence', { body: text })
+      )
     }
   }
-});
+})
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
+sw.addEventListener('notificationclick', (event: any) => {
+  event.notification.close()
 
-  const urlToOpen = event.notification.data?.url
-    || event.notification.data?.path
-    || '/dashboard';
+  const data = event.notification.data as PushNotificationData['data']
+  const urlToOpen = data?.url || data?.path || '/dashboard'
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
+    sw.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList as any[]) {
         if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
+          return (client as any).focus()
         }
       }
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(urlToOpen);
+      const clientsAny = sw.clients as any
+      if (clientsAny.openWindow) {
+        return clientsAny.openWindow(urlToOpen)
       }
     })
-  );
-});
+  )
+})
 
-self.addEventListener('notificationclose', () => {});
+sw.addEventListener('notificationclose', () => {})

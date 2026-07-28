@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { PropertyProvider } from "@/contexts/PropertyContext"
 import { RoleProvider } from "@/contexts/RoleContext"
 import SessionTimeout from "@/components/auth/session-timeout"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 export default function DashboardLayout({
   children,
@@ -28,7 +29,9 @@ export default function DashboardLayout({
               <Header onMenuClick={() => setMobileSidebarOpen(true)} />
               <main className="flex-1 overflow-y-auto">
                 <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-                  {children}
+                  <ErrorBoundary label="Dashboard section">
+                    {children}
+                  </ErrorBoundary>
                 </div>
               </main>
             </div>

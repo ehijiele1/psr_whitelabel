@@ -1,6 +1,5 @@
 import {
   sendEmail,
-  sendEmailViaEdge,
   notifyApplicationReceived,
   notifyApplicationApproved,
   notifyApplicationRejected,
@@ -13,7 +12,6 @@ import {
 
 export {
   sendEmail,
-  sendEmailViaEdge,
   notifyApplicationReceived,
   notifyApplicationApproved,
   notifyApplicationRejected,

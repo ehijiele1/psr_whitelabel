@@ -127,10 +127,6 @@ export async function sendEmailDirect(payload: EmailPayload): Promise<{ ok: bool
   }
 }
 
-export async function sendEmailViaEdge(...args: unknown[]) {
-  console.warn('[Email] Edge send not implemented', args);
-}
-
 export async function notifyApplicationReceived(data: { name: string; email?: string }) {
   if (data.email) {
     await sendEmail({ to: data.email, subject: 'Application Received', text: `Dear ${data.name}, your application has been received.` });

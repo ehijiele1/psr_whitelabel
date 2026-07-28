@@ -12,6 +12,22 @@ export function getEnv(key: string): string {
 }
 
 /**
+ * Get an optional environment variable that never throws.
+ * Returns empty string if missing, with a warning in development only.
+ * Use this for variables that have graceful fallbacks (e.g., distributed rate limiting).
+ */
+export function getOptionalEnv(key: string): string {
+  const value = process.env[key]
+  if (value === undefined) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[Env] Optional environment variable "${key}" is not set.`)
+    }
+    return ""
+  }
+  return value
+}
+
+/**
  * Get an environment variable, throwing an error if missing (even in development)
  * Use this for variables that are always required
  */
@@ -51,16 +67,16 @@ export const env = {
   paystackSecretKey: getEnv("PAYSTACK_SECRET_KEY"),
   
   // Optional but recommended
-  vapidPublicKey: getEnv("NEXT_PUBLIC_VAPID_PUBLIC_KEY"),
-  vapidPrivateKey: getEnv("VAPID_PRIVATE_KEY"),
-  ebulkSmsUsername: getEnv("EBULK_SMS_USERNAME"),
-  ebulkSmsApiKey: getEnv("EBULK_SMS_API_KEY"),
-  resendApiKey: getEnv("RESEND_API_KEY"),
-  emailFrom: getEnv("EMAIL_FROM") || "PrinceSteve Residence <noreply@vanniejay.com.ng>",
+  vapidPublicKey: getOptionalEnv("NEXT_PUBLIC_VAPID_PUBLIC_KEY"),
+  vapidPrivateKey: getOptionalEnv("VAPID_PRIVATE_KEY"),
+  ebulkSmsUsername: getOptionalEnv("EBULK_SMS_USERNAME"),
+  ebulkSmsApiKey: getOptionalEnv("EBULK_SMS_API_KEY"),
+  resendApiKey: getOptionalEnv("RESEND_API_KEY"),
+  emailFrom: getOptionalEnv("EMAIL_FROM") || "PrinceSteve Residence <noreply@vanniejay.com.ng>",
   
   // Upstash Redis for rate limiting (optional but recommended for production)
-  upstashRedisRestUrl: getEnv("UPSTASH_REDIS_REST_URL"),
-  upstashRedisRestToken: getEnv("UPSTASH_REDIS_REST_TOKEN"),
+  upstashRedisRestUrl: getOptionalEnv("UPSTASH_REDIS_REST_URL"),
+  upstashRedisRestToken: getOptionalEnv("UPSTASH_REDIS_REST_TOKEN"),
   
   // CSRF secret (required in production)
   csrfSecret: getEnv("CSRF_SECRET"),
