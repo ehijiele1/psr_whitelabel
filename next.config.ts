@@ -1,11 +1,4 @@
-import type { NextConfig } from "next";
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  skipWaiting: true,
-  swSrc: 'worker/index.ts',
-});
+import type { NextConfig } from "next"
 
 const csp = [
   `default-src 'self'`,
@@ -27,22 +20,22 @@ const csp = [
   `require-sri-for 'script' 'style'`,
 ]
 
-export default withPWA({
+const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**.supabase.co',
+        protocol: "https",
+        hostname: "**.supabase.co",
       },
       {
-        protocol: 'https',
-        hostname: '**.supabase.in',
+        protocol: "https",
+        hostname: "**.supabase.in",
       },
     ],
   },
   turbopack: {},
-   async headers() {
+  async headers() {
     return [
       {
         source: "/(.*)",
@@ -52,25 +45,27 @@ export default withPWA({
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-XSS-Protection", value: "1; mode=block" },
-          
+
           // HTTPS enforcement
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-          
+
           // Permissions Policy (formerly Feature Policy)
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
-          
+
           // Content Security Policy
           { key: "Content-Security-Policy", value: csp.join("; ") },
-          
+
           // Cross-Origin policies
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
           { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
           { key: "Cross-Origin-Embedder-Policy", value: "require-corp" },
-          
+
           // Cache control for sensitive pages
           { key: "Cache-Control", value: "no-store, max-age=0" },
         ],
       },
     ]
   },
-});
+}
+
+export default nextConfig
