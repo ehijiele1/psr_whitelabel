@@ -11,3 +11,4 @@ echo "🔍 Running typecheck before push (catches parse errors before Vercel doe
 npx tsc --noEmit
 
 echo "✅ Typecheck passed. Proceeding with push."
+ggshield secret scan pre-commit
