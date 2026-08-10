@@ -93,15 +93,24 @@ export default function StaffPage() {
     setSubmitting(true)
 
     if (createMethod === "password") {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: newEmail,
-        password: newPassword,
-        options: {
-          data: { full_name: newFullName, phone: newPhone, role: newRole },
-        },
+      // Use the secure admin API endpoint that creates the user with the
+      // service role key and is_admin_created flag (prevents privilege escalation)
+      const res = await fetch("/api/staff/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newEmail,
+          password: newPassword,
+          full_name: newFullName,
+          phone: newPhone,
+          role: newRole,
+        }),
       })
-      if (signUpError || !signUpData.user) {
-        toast.error(signUpError?.message || "Failed to create account")
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to create account")
         setSubmitting(false)
         return
       }

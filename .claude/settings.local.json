@@ -16,7 +16,8 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(vercel *)",
-      "Bash(npx husky *)"
+      "Bash(npx husky *)",
+      "Bash(xargs cat)"
     ]
   }
 }

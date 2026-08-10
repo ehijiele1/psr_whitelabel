@@ -1,0 +1,19 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "installCommand": "npm ci",
+  "functions": {
+    "src/app/api/webhooks/paystack/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/emails/send/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/push/send/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/notify/sms/route.ts": {
+      "maxDuration": 15
+    }
+  }
+}

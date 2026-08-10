@@ -41,8 +41,9 @@ ALTER SEQUENCE receipt_levy_seq RESTART WITH 1;
 DROP VIEW IF EXISTS landlord_financial_summary;
 
 -- Step 10: Reset the single settings row (if needed)
-INSERT INTO settings (id, property_name, landlord_name, address, emergency_phone, caretaker_name, caretaker_phone, bank_name, account_number, account_name, email, landlord_pin, caretaker_pin, tenant_pin, signature_url, whatsapp_number, updated_at)
-VALUES (gen_random_uuid(), 'PrinceSteve Residence', 'Mrs. Ibadin R.E', '35 Godilove Street, Akowonjo Egbeda, Lagos', '+2348054164910', 'Steve', '+2348024427735', 'First Bank Nigeria', '3012345678', 'Prince Steve Residence', 'beckydin63@gmail.com', '1234', '5678', '0000', NULL, NULL, now())
+-- SECURITY: Do NOT insert plaintext PINs - use NULL for PIN fields
+INSERT INTO settings (id, property_name, landlord_name, address, emergency_phone, caretaker_name, caretaker_phone, bank_name, account_number, account_name, email, signature_url, whatsapp_number, updated_at)
+VALUES (gen_random_uuid(), 'PrinceSteve Residence', 'Mrs. Ibadin R.E', '35 Godilove Street, Akowonjo Egbeda, Lagos', '+2348054164910', 'Steve', '+2348024427735', 'First Bank Nigeria', '3012345678', 'Prince Steve Residence', 'beckydin63@gmail.com', NULL, NULL, now())
 ON CONFLICT (id) DO NOTHING;
 
 -- Step 11: Verify cleanup (run these queries to confirm cleanup)

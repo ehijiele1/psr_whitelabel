@@ -24,7 +24,7 @@ import {
 import { useUserRole } from "@/contexts/RoleContext"
 import Logo from "./logo"
 
-const adminNavItems = [
+const landlordNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Properties", href: "/dashboard/properties", icon: Building2 },
   { label: "Tenants", href: "/dashboard/tenants", icon: Users },
@@ -34,6 +34,15 @@ const adminNavItems = [
   { label: "Applications", href: "/dashboard/applications", icon: FileText },
   { label: "Staff", href: "/dashboard/staff", icon: Shield },
   { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
+]
+
+const caretakerNavItems = [
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Tenants", href: "/dashboard/tenants", icon: Users },
+  { label: "Payments", href: "/dashboard/payments", icon: Receipt },
+  { label: "Tickets", href: "/dashboard/tickets", icon: Ticket },
+  { label: "Messages", href: "/dashboard/messages", icon: MessageSquare },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
@@ -47,10 +56,10 @@ const tenantNavItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
-  const { role, isLoading, isAdmin } = useUserRole()
+  const { role, isLoading } = useUserRole()
   const pathname = usePathname()
 
-  const navItems = isLoading ? [] : (isAdmin ? adminNavItems : tenantNavItems)
+  const navItems = isLoading ? [] : role === "landlord" ? landlordNavItems : role === "caretaker" ? caretakerNavItems : tenantNavItems
 
   return (
     <motion.aside

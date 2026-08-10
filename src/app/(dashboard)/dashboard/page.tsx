@@ -1,50 +1,39 @@
-"use client"
+// Server Component — no "use client".
+// The middleware already authenticated the user and attached x-user-role to
+// the request headers, so we read the role directly without a second DB call.
+// If the header is absent (e.g. direct server-side render without middleware)
+// we fall back to a Supabase query so the page always works correctly.
 
-import { useEffect, useState } from "react"
-import { Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/browser"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/clientFactory"
 import LandlordDashboard from "./landlord-view"
+import CaretakerDashboard from "./caretaker-view"
 import TenantDashboard from "./tenant-view"
 
-export default function DashboardPage() {
-  const [role, setRole] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+export default async function DashboardPage() {
+  const headersList = await headers()
+  let role = headersList.get("x-user-role")
 
-  useEffect(() => {
-    const fetchRole = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setLoading(false)
-        return
-      }
+  // Fallback: read role from DB when the middleware header is unavailable.
+  if (!role) {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single()
+    if (!user) redirect("/login")
 
-      setRole(profile?.role || null)
-      setLoading(false)
-    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single()
 
-    fetchRole()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    role = profile?.role ?? null
   }
 
-  const adminRoles = ["landlord", "caretaker"]
-
-  if (role && adminRoles.includes(role)) {
-    return <LandlordDashboard />
-  }
-
+  if (role === "landlord") return <LandlordDashboard />
+  if (role === "caretaker") return <CaretakerDashboard />
   return <TenantDashboard />
 }

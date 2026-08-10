@@ -25,6 +25,14 @@ export const updateProfileSchema = z.object({
   email: emailSchema.optional(),
 });
 
+export const staffCreateSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  full_name: z.string().min(2, 'Full name must be at least 2 characters'),
+  phone: phoneSchema.optional(),
+  role: z.enum(['caretaker', 'tenant']).default('caretaker'),
+});
+
 // ── Authentication Schemas ───────────────────────────────────────────────
 
 export const loginSchema = z.object({

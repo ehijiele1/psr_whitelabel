@@ -61,7 +61,9 @@ export async function POST(req: NextRequest) {
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const safeFolder = folder ? folder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\.{2,}/g, '').replace(/^\/+|\/+$/g, '') : '';
-    const filePath = safeFolder ? `${safeFolder}/${timestamp}-${safeName}` : `${timestamp}-${safeName}`;
+    // Ensure the user's ID is in the path for ownership-based RLS
+    const userPathPrefix = auth.user.id;
+    const filePath = safeFolder ? `${userPathPrefix}/${safeFolder}/${timestamp}-${safeName}` : `${userPathPrefix}/${timestamp}-${safeName}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -76,9 +78,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
-    const { data: { publicUrl } } = supabase.storage
+    // Buckets are private - generate a signed URL instead of public URL
+    const { data: signedData, error: signedError } = await supabase.storage
       .from(bucket)
-      .getPublicUrl(uploadData.path);
+      .createSignedUrl(uploadData.path, 3600); // 1 hour expiry
+
+    if (signedError || !signedData?.signedUrl) {
+      // Fall back to trying the public URL (may not work for private buckets)
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(uploadData.path);
+      return NextResponse.json({
+        url: publicUrl,
+        path: uploadData.path,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        signed: false,
+      });
+    }
 
     // Insert file metadata with ownership
     const { error: dbError } = await supabase.from('files').insert({
@@ -98,11 +116,12 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      url: publicUrl,
+      url: signedData.signedUrl,
       path: uploadData.path,
       name: file.name,
       size: file.size,
       type: file.type,
+      signed: true,
     });
   } catch (err) {
     console.error('[Upload API] Error:', err);

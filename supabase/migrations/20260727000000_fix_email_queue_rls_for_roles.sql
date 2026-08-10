@@ -2,6 +2,9 @@
 -- Previously only service_role could insert, but now we use regular clients
 -- for email operations with proper ownership tracking
 
+-- Add created_by column for ownership tracking
+ALTER TABLE email_queue ADD COLUMN IF NOT EXISTS created_by uuid;
+
 DROP POLICY IF EXISTS email_queue_insert ON email_queue;
 DROP POLICY IF EXISTS email_queue_select ON email_queue;
 DROP POLICY IF EXISTS email_queue_update ON email_queue;
@@ -10,7 +13,7 @@ DROP POLICY IF EXISTS email_queue_update ON email_queue;
 CREATE POLICY email_queue_insert ON email_queue FOR INSERT
   WITH CHECK (
     auth.role() = 'service_role' OR
-    auth.role() IN ('landlord', 'caretaker')
+    get_my_role() IN ('landlord', 'caretaker')
   );
 
 -- Allow service_role to select all, and users to select their own emails

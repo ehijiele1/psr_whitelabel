@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Bell, Shield, CreditCard, Save, Loader2 } from "lucide-react"
+import { Bell, CreditCard, Save, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,9 +21,6 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [paystackKey, setPaystackKey] = useState("")
-  const [bankAccount, setBankAccount] = useState("")
-  const [smsApiKey, setSmsApiKey] = useState("")
   const [prefs, setPrefs] = useState<NotifPrefs>({
     rent_reminders: true,
     payment_alerts: true,
@@ -31,15 +28,6 @@ export default function SettingsPage() {
   })
 
   useEffect(() => {
-    const storedPaystack = localStorage.getItem("paystack_public_key")
-    const storedBank = localStorage.getItem("bank_account")
-    const storedSms = localStorage.getItem("sms_api_key")
-    Promise.resolve().then(() => {
-      if (storedPaystack) setPaystackKey(storedPaystack)
-      if (storedBank) setBankAccount(storedBank)
-      if (storedSms) setSmsApiKey(storedSms)
-    })
-
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { setLoading(false); return }
@@ -75,10 +63,6 @@ export default function SettingsPage() {
       toast.error(error.message)
       return
     }
-
-    localStorage.setItem("paystack_public_key", paystackKey)
-    localStorage.setItem("bank_account", bankAccount)
-    localStorage.setItem("sms_api_key", smsApiKey)
 
     setSaving(false)
     toast.success("Settings saved")
@@ -146,31 +130,10 @@ export default function SettingsPage() {
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold">Payment Settings</h2>
+            <h2 className="font-semibold">Bank Account</h2>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="paystack">Paystack Public Key</Label>
-            <Input id="paystack" placeholder="pk_test_xxxxxxxxxxxxx" value={paystackKey} onChange={(e) => setPaystackKey(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="bank">Bank Account (for offline payments)</Label>
-            <Input id="bank" placeholder="Account name - Bank - Account number" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold">SMS Provider</h2>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="sms">eBulkSMS API Key</Label>
-            <Input id="sms" type="password" placeholder="Enter your API key" value={smsApiKey} onChange={(e) => setSmsApiKey(e.target.value)} />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Used for sending rent reminders and payment confirmations via SMS.
+          <p className="text-sm text-muted-foreground">
+            Bank account details for offline payments are managed by the landlord in the property settings.
           </p>
         </CardContent>
       </Card>
