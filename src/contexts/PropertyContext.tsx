@@ -25,10 +25,18 @@ export function PropertyProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProperties = async () => {
     const supabase = createClient()
-    const { data, error } = await supabase
-      .from("properties")
-      .select("id, name")
-      .order("name")
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setProperties([])
+      setLoading(false)
+      return
+    }
+
+    // Landlords see only their own properties (RLS enforces this)
+    // Caretakers and tenants see properties via their RLS policies
+    // The RLS policies handle the filtering server-side
+
+    const { data, error } = await supabase.from("properties").select("id, name").order("name")
 
     if (error) {
       console.error("[PropertyContext] Failed to load properties:", error.message)

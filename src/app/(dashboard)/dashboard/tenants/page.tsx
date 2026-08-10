@@ -1,9 +1,9 @@
 "use client"
 
 import { motion } from "framer-motion"
-import Link from "next/link"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState, useCallback } from "react"
+import Link from "next/link"
 import { Search, MoreHorizontal, Plus, Pencil, Trash2, Send, UserPlus, Users, Building2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -30,6 +30,7 @@ import { createClient } from "@/lib/supabase/browser"
 import { createInvitation } from "@/lib/supabase/invitations"
 import { toast } from "sonner"
 import { useProperty } from "@/contexts/PropertyContext"
+import { useUserRole } from "@/contexts/RoleContext"
 
 const statusStyles: Record<string, { label: string; variant: "success" | "destructive" | "warning" | "secondary" }> = {
   active: { label: "Active", variant: "success" },
@@ -51,7 +52,8 @@ function formatDate(dateStr: string) {
 
 export default function TenantsPage() {
   const { activePropertyId, setActivePropertyId, properties } = useProperty()
-  const supabase = createClient()
+  const { role } = useUserRole()
+  const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
 
   const [tenants, setTenants] = useState<any[]>([])
@@ -226,9 +228,7 @@ export default function TenantsPage() {
       {fetchError && (
         <div className="p-4 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center justify-between">
           <span>{fetchError}</span>
-          <Button variant="outline" size="sm" onClick={fetchTenants}>
-            Retry
-          </Button>
+          <Button variant="outline" size="sm" onClick={fetchTenants}>Retry</Button>
         </div>
       )}
 
@@ -318,7 +318,7 @@ export default function TenantsPage() {
                       </motion.tr>
                     )
                   })}
-                </motion.tbody>
+            </motion.tbody>
           </table>
         </div>
       </Card>
@@ -351,7 +351,8 @@ function TenantDialog({
   editingTenant: any | null
   onSuccess: () => void
 }) {
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
+  const { role } = useUserRole()
   const isEditing = !!editingTenant
 
   const [mode, setMode] = useState<"existing" | "new_user">("existing")
@@ -442,8 +443,9 @@ function TenantDialog({
     if (unit) setRentAmount(String(unit.monthly_rent))
   }, [selectedUnitId, availableUnits, isEditing])
 
+  // Restrict profile search to landlords/caretakers only (RLS enforces this)
   useEffect(() => {
-    if (!userQuery || userQuery.length < 2) {
+    if (!userQuery || userQuery.length < 2 || role === "tenant") {
       setSearchResults([])
       return
     }
@@ -456,7 +458,7 @@ function TenantDialog({
       if (data) setSearchResults(data)
     }, 300)
     return () => clearTimeout(timer)
-  }, [userQuery, supabase])
+  }, [userQuery, supabase, role])
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -465,23 +467,35 @@ function TenantDialog({
 
     if (!isEditing && mode === "new_user") {
       if (createMethod === "password") {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: newEmail,
-          password: newPassword,
-          options: {
-            data: { full_name: newFullName, phone: newPhone, role: "tenant" },
-          },
+        // Use admin API to create the user with proper is_admin_created flag
+        const res = await fetch("/api/staff/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: newEmail,
+            password: newPassword,
+            full_name: newFullName,
+            phone: newPhone,
+            role: "tenant",
+          }),
         })
-        if (signUpError || !signUpData.user) {
-          toast.error(signUpError?.message || "Failed to create account")
+        const data = await res.json()
+        if (!res.ok) {
+          toast.error(data.error || "Failed to create account")
           setSubmitting(false)
           return
         }
-        userId = signUpData.user.id
+        // The admin API returns the user_id but we need to get the profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("email", newEmail)
+          .maybeSingle()
+        userId = profile?.user_id || data.user_id
       } else {
         const result = await createInvitation({
           phone: newPhone,
-          email: newEmail || undefined,
+          email: newEmail,
           full_name: newFullName,
           role: "tenant",
           property_id: selectedPropertyId || undefined,

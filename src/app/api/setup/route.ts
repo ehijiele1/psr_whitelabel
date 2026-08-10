@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         full_name: account.fullName,
         phone: account.phone,
         role: "landlord",
+        is_admin_created: true,
       },
     })
 

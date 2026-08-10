@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { useEffect, useState, useMemo } from "react"
 import { Loader2 } from "lucide-react"
 import { Building2, Users, TrendingUp, Clock } from "lucide-react"
 import KpiCard from "@/components/dashboard/kpi-card"
@@ -17,6 +16,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 export default function LandlordDashboard() {
   const { activePropertyId } = useProperty()
+  const supabase = useMemo(() => createClient(), [])
   const [stats, setStats] = useState({
     totalProperties: 0,
     activeTenants: 0,
@@ -33,7 +33,6 @@ export default function LandlordDashboard() {
     if (!activePropertyId) return
     setLoading(true)
 
-    const supabase = createClient()
     ;(async () => {
       try {
         const responses = await Promise.allSettled([
@@ -95,7 +94,7 @@ export default function LandlordDashboard() {
         setLoading(false)
       }
     })()
-  }, [activePropertyId])
+  }, [activePropertyId, supabase])
 
   if (!activePropertyId) {
     return (
@@ -120,12 +119,7 @@ export default function LandlordDashboard() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
+    <div className="space-y-6 animate-slide-up">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -180,6 +174,6 @@ export default function LandlordDashboard() {
         <QuickActions />
         <MaintenanceAlerts />
       </div>
-    </motion.div>
+    </div>
   )
 }

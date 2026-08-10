@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/browser"
 import { toast } from "sonner"
+import { useUserRole } from "@/contexts/RoleContext"
 
 interface TicketData {
   id: string
@@ -59,6 +60,7 @@ const statusStyles: Record<string, "warning" | "default" | "success" | "secondar
 
 export default function TicketsPage() {
   const supabase = createClient()
+  const { role, isAdmin } = useUserRole()
 
   const [tickets, setTickets] = useState<TicketData[]>([])
   const [properties, setProperties] = useState<PropertyOption[]>([])
@@ -77,10 +79,26 @@ export default function TicketsPage() {
   })
 
   const fetchTickets = useCallback(async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("tickets")
       .select("*, tenants!inner(id, profiles!inner(full_name)), units!inner(name), properties!inner(name)")
       .order("created_at", { ascending: false })
+
+    // Tenants can only see their own tickets
+    if (role === "tenant") {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle()
+      if (tenant) {
+        query = query.eq("tenant_id", tenant.id)
+      }
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error("Error fetching tickets:", error)
@@ -88,7 +106,7 @@ export default function TicketsPage() {
       setTickets((data as TicketData[]) || [])
     }
     setLoading(false)
-  }, [supabase])
+  }, [supabase, role])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -96,6 +114,11 @@ export default function TicketsPage() {
   }, [fetchTickets])
 
   useEffect(() => {
+    // Only staff can view all properties for ticket assignment
+    if (!isAdmin) {
+      setProperties([])
+      return
+    }
     supabase
       .from("properties")
       .select("id, name")
@@ -107,7 +130,7 @@ export default function TicketsPage() {
           setProperties((data as PropertyOption[]) || [])
         }
       })
-  }, [supabase])
+  }, [supabase, isAdmin])
 
   const handlePropertyChange = async (propertyId: string) => {
     setFormData({ ...formData, property_id: propertyId, unit_id: "" })
@@ -154,13 +177,16 @@ export default function TicketsPage() {
       return
     }
 
-    const { data: tenant } = await supabase
-      .from("tenants")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle()
-
-    const tenantId = tenant?.id || null
+    // Tenants can only create tickets for their own unit
+    let tenantId: string | null = null
+    if (role === "tenant") {
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle()
+      tenantId = tenant?.id || null
+    }
 
     const { error } = await supabase.from("tickets").insert({
       tenant_id: tenantId,
@@ -190,6 +216,8 @@ export default function TicketsPage() {
     setSubmitting(false)
   }
 
+  const canAssignProperty = isAdmin
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -201,7 +229,7 @@ export default function TicketsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Maintenance Tickets</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Track and manage maintenance requests across all properties.
+            {isAdmin ? "Track and manage maintenance requests across all properties." : "Track your maintenance requests."}
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -219,39 +247,43 @@ export default function TicketsPage() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="property">Property</Label>
-                <select
-                  id="property"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  value={formData.property_id}
-                  onChange={(e) => handlePropertyChange(e.target.value)}
-                >
-                  <option value="">Select property...</option>
-                  {properties.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit">Unit</Label>
-                <select
-                  id="unit"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  value={formData.unit_id}
-                  onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
-                  disabled={!formData.property_id}
-                >
-                  <option value="">Select unit...</option>
-                  {units.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {canAssignProperty && (
+                <div className="space-y-2">
+                  <Label htmlFor="property">Property</Label>
+                  <select
+                    id="property"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={formData.property_id}
+                    onChange={(e) => handlePropertyChange(e.target.value)}
+                  >
+                    <option value="">Select property...</option>
+                    {properties.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {canAssignProperty && (
+                <div className="space-y-2">
+                  <Label htmlFor="unit">Unit</Label>
+                  <select
+                    id="unit"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={formData.unit_id}
+                    onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
+                    disabled={!formData.property_id}
+                  >
+                    <option value="">Select unit...</option>
+                    {units.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input
@@ -325,8 +357,8 @@ export default function TicketsPage() {
                 <tr className="border-b border-border">
                   <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Ticket</th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Title</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Tenant</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Property</th>
+                  {isAdmin && <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Tenant</th>}
+                  {isAdmin && <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Property</th>}
                   <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Priority</th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Status</th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Date</th>
@@ -348,8 +380,8 @@ export default function TicketsPage() {
                     >
                       <td className="px-6 py-3 text-sm font-medium">#{ticket.id.slice(0, 8)}</td>
                       <td className="px-6 py-3 text-sm">{ticket.title}</td>
-                      <td className="px-6 py-3 text-sm">{ticket.tenants?.profiles?.full_name || "—"}</td>
-                      <td className="px-6 py-3 text-sm text-muted-foreground">{ticket.properties?.name || "—"}</td>
+                      {isAdmin && <td className="px-6 py-3 text-sm">{ticket.tenants?.profiles?.full_name || "—"}</td>}
+                      {isAdmin && <td className="px-6 py-3 text-sm text-muted-foreground">{ticket.properties?.name || "—"}</td>}
                       <td className="px-6 py-3">
                         <Badge variant={priorityStyles[ticket.priority] || "default"} className="text-xs capitalize">
                           {ticket.priority}
@@ -361,8 +393,8 @@ export default function TicketsPage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-3 text-sm text-muted-foreground">{date}</td>
-                      <td className="px-6 py-3">
-                        {ticket.status !== "closed" && ticket.status !== "resolved" && (
+                      <td className="px-2 py-3 text-right">
+                        {isAdmin && ticket.status !== "closed" && ticket.status !== "resolved" && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isUpdating}>

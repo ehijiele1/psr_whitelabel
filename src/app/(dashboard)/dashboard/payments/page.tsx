@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { Receipt, Search, Check, X, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -55,7 +55,7 @@ const statusStyles: Record<string, { label: string; variant: "success" | "warnin
 }
 
 export default function PaymentsPage() {
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const [payments, setPayments] = useState<Payment[]>([])
   const [tenants, setTenants] = useState<TenantOption[]>([])
