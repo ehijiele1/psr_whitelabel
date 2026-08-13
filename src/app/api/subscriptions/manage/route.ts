@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       if (subErr) return NextResponse.json({ error: subErr.message }, { status: 500 });
 
       const initResult = await initializeSubscription({
-        email: tenant.email || `${tenant.phone}@princesteve.ng`,
+        email: tenant.email || `${tenant.phone}@example.com`,
         amount: plan.amount,
         plan: plan.plan_code,
         metadata: { subscription_id: sub.id, tenant_id, plan_id },

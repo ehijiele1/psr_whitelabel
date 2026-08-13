@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server"
 import { rateLimit, getIP } from "@/lib/rateLimiter"
+import { brandServer } from "@/lib/config"
 
 const WEBHOOK_API_KEY = process.env.SMS_WEBHOOK_API_KEY || ""
 
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
             apikey: apiKeyValue,
           },
           message: {
-            sender: "PrinceSteve",
+            sender: brandServer.smsSender,
             messagetext: message,
             flash: "0",
           },

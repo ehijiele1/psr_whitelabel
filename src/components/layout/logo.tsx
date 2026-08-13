@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { brand } from "@/lib/config"
 
 interface LogoProps {
   className?: string
@@ -11,6 +12,7 @@ export default function Logo({ className, collapsed, dark }: LogoProps) {
   const textColor = dark ? "#0f172a" : "#ffffff"
   const brandColor = dark ? "#e2e8f0" : "#111111"
   const accentColor = dark ? "#00a85e" : "#005A36"
+  const monogram = brand.shortName.charAt(0).toUpperCase() || "E"
 
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
@@ -33,7 +35,7 @@ export default function Logo({ className, collapsed, dark }: LogoProps) {
             fontWeight="700"
             fontFamily="var(--font-plus-jakarta)"
           >
-            P
+            {monogram}
           </text>
         </svg>
       </div>
@@ -43,13 +45,13 @@ export default function Logo({ className, collapsed, dark }: LogoProps) {
             className="text-sm font-bold leading-tight tracking-tight"
             style={{ color: brandColor, fontFamily: "var(--font-plus-jakarta)" }}
           >
-            PrinceSteve
+            {brand.name}
           </span>
           <span
             className="text-[10px] font-medium leading-tight tracking-wider uppercase"
             style={{ color: accentColor, fontFamily: "var(--font-plus-jakarta)" }}
           >
-            Residence
+            {brand.shortName}
           </span>
         </div>
       )}

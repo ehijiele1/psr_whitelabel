@@ -67,71 +67,6 @@ export interface Tenant {
   created_at: string;
 }
 
-// ── Applicants ──────────────────────────────────────────────────
-export type ApplicantStage =
-  | 'form-submitted'
-  | 'payment-pending'
-  | 'payment-proof-submitted'
-  | 'payment-confirmed'
-  | 'agreement-pending'
-  | 'agreement-signed'
-  | 'pending-review'
-  | 'approved'
-  | 'rejected';
-
-export interface Applicant {
-  id: string;
-  // Personal
-  name: string;
-  phone: string;
-  phone2?: string;
-  email?: string;
-  sex?: string;
-  state_of_origin?: string;
-  tribe?: string;
-  lga?: string;
-  home_address?: string;
-  nationality?: string;
-  religion?: string;
-  reason_moving?: string;
-  // Employment
-  occupation?: string;
-  employer?: string;
-  employer_address?: string;
-  employer_duration?: string;
-  job_title?: string;
-  office_phone?: string;
-  // Guarantor
-  guarantor?: string;
-  guarantor_address?: string;
-  guarantor_phone?: string;
-  guarantor_occupation?: string;
-  // Identity
-  nin?: string;
-  photo?: string;
-  // Preferences
-  unit_type: UnitType;
-  move_in?: string;
-  // Payment
-  payment_status: 'unpaid' | 'proof-submitted' | 'paid';
-  payment_amount?: number;
-  payment_date?: string;
-  payment_ref?: string;
-  payment_method?: 'paystack' | 'bank transfer';
-  depositor_name?: string;
-  proof_image?: string;
-  // Agreement
-  signature_data?: string;
-  signature_type?: 'draw' | 'type' | 'upload';
-  agreed_on?: string;
-  unit_assigned?: string;
-  // Meta
-  stage: ApplicantStage;
-  submitted_at: string;
-  reviewed_at?: string;
-  rejection_reason?: string;
-}
-
 // ── Payments ────────────────────────────────────────────────────
 export type PaymentType = 'rent' | 'levy';
 export type PaymentMethod = 'cash' | 'bank transfer' | 'paystack';
@@ -345,7 +280,6 @@ export type Database = {
       units: PSRTable<Unit>;
       payments: PSRTable<Payment>;
       tickets: PSRTable<Ticket>;
-      applicants: PSRTable<Applicant>;
       inbox: PSRTable<InboxMessage>;
       activity: PSRTable<ActivityItem>;
       settings: PSRTable<PropertySettings>;
@@ -358,6 +292,8 @@ export type Database = {
       notification_preferences: PSRTable<NotificationPreference>;
       audit_logs: PSRTable<AuditLogEntry>;
       email_queue: PSRTable<EmailQueueItem>;
+      push_subscriptions: PSRTable<PushSubscriptionRecord>;
+      tenant_subscriptions: PSRTable<Record<string, unknown>>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -370,6 +306,7 @@ export interface NotificationPreference {
   sms_enabled: boolean;
   email_enabled: boolean;
   in_app_enabled: boolean;
+  push_enabled: boolean;
   rent_reminders: boolean;
   payment_alerts: boolean;
   ticket_updates: boolean;
@@ -404,4 +341,14 @@ export interface EmailQueueItem {
   error?: string;
   created_at: string;
   sent_at?: string;
+}
+
+export interface PushSubscriptionRecord {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_agent?: string;
+  created_at: string;
 }

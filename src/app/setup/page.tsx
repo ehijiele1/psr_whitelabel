@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, Loader2, ArrowLeft, ArrowRight, Building2, Home, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ThemeToggle from "@/components/ui/theme-toggle"
-import { createClient } from "@/lib/supabase/browser"
+import { csrfFetch } from "@/lib/csrf-client"
 import Logo from "@/components/layout/logo"
 import AccountStep from "@/components/setup/account-step"
 import PropertyStep from "@/components/setup/property-step"
@@ -95,7 +95,7 @@ export default function SetupPage() {
     setSubmitting(true)
     setError("")
     try {
-      const res = await fetch("/api/setup", {
+      const res = await csrfFetch("/api/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ account, property, unitGroups }),

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import ThemeToggle from "@/components/ui/theme-toggle"
+import { brand } from "@/lib/config"
 
 export default function Navbar() {
 
@@ -12,10 +13,10 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-lg bg-[#005A36] flex items-center justify-center shrink-0">
-                <span className="text-white font-bold text-lg font-heading">P</span>
+                <span className="text-white font-bold text-lg font-heading">{brand.shortName.charAt(0).toUpperCase()}</span>
               </div>
               <span className="text-base font-bold text-[#111111] dark:text-white font-heading tracking-tight">
-                PrinceSteve <span className="text-[#005A36] dark:text-[#00a85e]">Residence</span>
+                {brand.name}
               </span>
             </Link>
 

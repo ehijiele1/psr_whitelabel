@@ -116,6 +116,7 @@ export default function TicketsPage() {
   useEffect(() => {
     // Only staff can view all properties for ticket assignment
     if (!isAdmin) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProperties([])
       return
     }

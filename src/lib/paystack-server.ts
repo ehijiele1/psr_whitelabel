@@ -1,4 +1,5 @@
 import { env } from '@/lib/env'
+import { brand } from '@/lib/config'
 import { fetchWithRetry } from '@/lib/fetch'
 import { log, logAuditEvent } from '@/lib/logger'
 
@@ -36,7 +37,7 @@ const paystack = {
           amount: options.amount * 100,
           reference: options.reference,
           metadata: options.metadata,
-          currency: "NGN",
+          currency: brand.currencyCode,
         }),
       }
     )
@@ -119,7 +120,7 @@ const paystack = {
           description: options.description,
           send_invoices: options.send_invoices ?? true,
           send_sms: options.send_sms ?? true,
-          currency: options.currency || "NGN",
+          currency: options.currency || brand.currencyCode,
         }),
       }
     )
@@ -150,7 +151,7 @@ const paystack = {
     }
     
     const data = await response.json()
-    return (data.data || []).map((p: any) => ({
+    return (data.data || []).map((p: { plan_code: string; name: string; amount: number; interval: string; status: string; id: number }) => ({
       plan_code: p.plan_code,
       name: p.name,
       amount: p.amount / 100,
@@ -182,7 +183,7 @@ const paystack = {
           amount: options.amount * 100,
           plan: options.plan,
           metadata: options.metadata,
-          currency: "NGN",
+          currency: brand.currencyCode,
         }),
       }
     )
@@ -218,7 +219,7 @@ const paystack = {
     }
     
     const data = await response.json()
-    return (data.data || []).map((s: any) => ({
+    return (data.data || []).map((s: { subscription_code: string; status: string; plan: { name: string; amount: number; interval: string }; next_payment_date: string | null }) => ({
       subscription_code: s.subscription_code,
       status: s.status,
       plan: { name: s.plan.name, amount: s.plan.amount / 100, interval: s.plan.interval },

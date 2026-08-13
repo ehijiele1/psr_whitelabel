@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { brand } from "@/lib/config"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger
@@ -290,7 +291,7 @@ export default function PaymentsPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (₦)</Label>
+                <Label htmlFor="amount">Amount ({brand.currencySymbol})</Label>
                 <Input
                   id="amount"
                   type="number"

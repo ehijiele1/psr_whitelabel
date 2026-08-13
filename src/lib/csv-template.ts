@@ -1,3 +1,7 @@
+import { brand } from "@/lib/config"
+
+const CURRENCY = brand.currencySymbol
+
 export function generateTenantsTemplate(): string {
   const headers = [
     "full_name",
@@ -21,7 +25,7 @@ export function generateTenantsTemplate(): string {
       "Example: Chidi Okonkwo",
       "+234 802 123 4567",
       "chidi@example.com",
-      "PrinceSteve Heights",
+      "Maple Heights Estate",
       "Apt 3B",
       "apartment",
       "tenant",
@@ -92,7 +96,7 @@ export function generatePaymentsTemplate(): string {
       "600000",
       "rent",
       "2023-05-15",
-      "50% first installment (rent was ₦1,200,000/yr)",
+      `50% first installment (rent was ${CURRENCY}1,200,000/yr)`,
     ],
     [
       "+234 802 123 4567",
@@ -112,7 +116,7 @@ export function generatePaymentsTemplate(): string {
       "750000",
       "rent",
       "2024-05-10",
-      "50% first (rent increased to ₦1,500,000)",
+      `50% first (rent increased to ${CURRENCY}1,500,000)`,
     ],
     [
       "+234 802 123 4567",

@@ -9,6 +9,7 @@ import KpiCard from "@/components/dashboard/kpi-card"
 import PayRentDialog from "@/components/dashboard/pay-rent-dialog"
 import PaymentHistory from "@/components/dashboard/payment-history"
 import { createClient } from "@/lib/supabase/browser"
+import { brand } from "@/lib/config"
 
 interface TenantInfo {
   id: string
@@ -151,14 +152,14 @@ export default function TenantDashboard() {
         <KpiCard
           title="Monthly Rent"
           value={tenant.rent}
-          prefix="₦"
+          prefix={brand.currencySymbol}
           icon={<Receipt className="w-5 h-5" />}
           delay={0.05}
         />
         <KpiCard
           title="Total Paid"
           value={stats.totalPaid}
-          prefix="₦"
+          prefix={brand.currencySymbol}
           icon={<User className="w-5 h-5" />}
           delay={0.1}
         />
@@ -205,7 +206,7 @@ export default function TenantDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Pay your monthly rent of {new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(tenant.rent)} securely via Paystack.
+              Pay your monthly rent of {new Intl.NumberFormat(brand.locale, { style: "currency", currency: brand.currencyCode }).format(tenant.rent)} securely via Paystack.
             </p>
             <PayRentDialog
               tenantId={tenant.id}

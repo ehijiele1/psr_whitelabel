@@ -7,6 +7,7 @@ import { Loader2, ArrowRight, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ThemeToggle from "@/components/ui/theme-toggle"
 import { createClient } from "@/lib/supabase/browser"
+import { brand } from "@/lib/config"
 import Navbar from "@/components/home/navbar"
 import Hero from "@/components/home/hero"
 import Features from "@/components/home/features"
@@ -46,10 +47,10 @@ export default function HomePage() {
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-[#005A36] flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
+              <span className="text-white font-bold text-lg">{brand.shortName.charAt(0).toUpperCase()}</span>
             </div>
             <span className="text-base font-bold text-foreground">
-              PrinceSteve <span className="text-[#005A36] dark:text-[#00a85e]">Residence</span>
+              {brand.name}
             </span>
           </div>
           <ThemeToggle />
@@ -67,7 +68,7 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Welcome to PrinceSteve Residence
+              Welcome to {brand.name}
             </h1>
 
             <p className="text-muted-foreground leading-relaxed">
@@ -99,7 +100,7 @@ export default function HomePage() {
 
         <footer className="text-center py-6">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} PrinceSteve Residence. All rights reserved.
+            &copy; {new Date().getFullYear()} {brand.name}. All rights reserved.
           </p>
         </footer>
       </div>

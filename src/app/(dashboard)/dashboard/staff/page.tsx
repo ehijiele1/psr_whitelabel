@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/browser"
 import { createInvitation } from "@/lib/supabase/invitations"
+import { csrfFetch } from "@/lib/csrf-client"
 import { toast } from "sonner"
 
 interface StaffMember {
@@ -95,7 +96,7 @@ export default function StaffPage() {
     if (createMethod === "password") {
       // Use the secure admin API endpoint that creates the user with the
       // service role key and is_admin_created flag (prevents privilege escalation)
-      const res = await fetch("/api/staff/create", {
+      const res = await csrfFetch("/api/staff/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

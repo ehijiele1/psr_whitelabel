@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 /**
- * PrinceSteve Residence Service Worker
+ * Property Management Service Worker
  *
  * Manual service worker implementation. Provides:
  * - Offline fallback page
@@ -12,12 +12,12 @@
  * with a serwist-generated bundle from src/app/sw.ts.
  */
 
-const CACHE_VERSION = "psr-v1"
+const CACHE_VERSION = "em-v1"
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 const OFFLINE_URL = "/offline"
 
-const PRECACHE_URLS = ["/", "/offline", "/manifest.json"]
+const PRECACHE_URLS = ["/", "/offline", "/manifest.webmanifest"]
 
 // ── Install: precache static assets ──────────────────────────────────────
 
@@ -136,7 +136,7 @@ self.addEventListener("push", (event) => {
     const text = event.data.text()
     if (text) {
       event.waitUntil(
-        self.registration.showNotification("PrinceSteve Residence", { body: text })
+        self.registration.showNotification("Property Manager", { body: text })
       )
     }
     return
@@ -155,7 +155,7 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(
     self.registration.showNotification(
-      data.title || "PrinceSteve Residence",
+      data.title || "Property Manager",
       options
     )
   )

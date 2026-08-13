@@ -54,7 +54,6 @@ export async function fetchWithRetry(
   } = options
 
   let lastError: Error | null = null
-  let lastResponse: Response | null = null
 
   for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
     try {
@@ -76,7 +75,6 @@ export async function fetchWithRetry(
           const delay = getRetryDelay(response, retryDelay, attempt)
           onRetry?.(attempt, response, delay)
           await sleep(delay)
-          lastResponse = response
           continue
         }
 
@@ -123,8 +121,7 @@ export async function fetchWithRetry(
  */
 function defaultShouldRetry(
   response: Response | null,
-  error: Error | null,
-  attempt: number
+  error: Error | null
 ): boolean {
   // Retry on network errors
   if (error && isNetworkError(error)) {

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import ThemeToggle from "@/components/ui/theme-toggle"
 import Logo from "@/components/layout/logo"
+import { csrfFetch } from "@/lib/csrf-client"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -22,7 +23,7 @@ export default function ForgotPasswordPage() {
     setError("")
 
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await csrfFetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -73,7 +74,7 @@ export default function ForgotPasswordPage() {
             </div>
             <p className="text-sm text-muted-foreground">
               If an account exists for <strong className="text-foreground">{email}</strong>,
-              you'll receive a password reset email shortly.
+              you&apos;ll receive a password reset email shortly.
             </p>
             <Button variant="outline" className="w-full" asChild>
               <Link href="/login">Back to login</Link>

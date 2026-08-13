@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { staggerContainer, staggerItem } from "@/lib/animations"
 import { createClient } from "@/lib/supabase/browser"
+import { brand } from "@/lib/config"
 
 interface Payment {
   id: string
@@ -27,11 +28,11 @@ const statusStyles: Record<string, { label: string; variant: "success" | "warnin
 }
 
 function formatAmount(amount: number) {
-  return `₦${amount.toLocaleString()}`
+  return `${brand.currencySymbol}${amount.toLocaleString()}`
 }
 
 function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("en-NG", {
+  return new Date(date).toLocaleDateString(brand.locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",

@@ -1,6 +1,8 @@
-# PrinceSteve Residence — Property Management System
+# EstateManager — Property Management System
 
-A production-grade, secure, multi-role property management SaaS built with Next.js 15, Supabase, Tailwind CSS, and deployed on Vercel.
+A production-grade, white-label, multi-role property management platform built with Next.js, Supabase, Tailwind CSS, and deployed on Vercel.
+
+Every brand surface (name, colors, contacts, agreement placeholders, sender IDs) is driven by environment variables with neutral defaults, so each deployment can be rebranded without code changes.
 
 ---
 
@@ -8,13 +10,16 @@ A production-grade, secure, multi-role property management SaaS built with Next.
 
 | Layer      | Technology                        |
 |------------|-----------------------------------|
-| Frontend   | Next.js 15 (App Router), React 18 |
-| Styling    | Tailwind CSS, Tabler Icons        |
-| Backend    | Supabase (Auth + PostgreSQL)      |
+| Frontend   | Next.js 16 (App Router), React 19 |
+| Styling    | Tailwind CSS 4                    |
+| Backend    | Supabase (Auth + PostgreSQL + RLS)|
 | Payments   | Paystack (PaystackPop + Webhooks) |
+| Emails     | Resend                            |
+| SMS        | eBulkSMS                          |
+| Push       | Web Push (VAPID)                  |
+| Rate limit | Upstash Redis (in-memory fallback)|
 | Hosting    | Vercel                            |
-| Version    | GitHub                            |
-| PWA        | next-pwa                          |
+| PWA        | Hand-written service worker + manifest route |
 
 ---
 
@@ -22,33 +27,61 @@ A production-grade, secure, multi-role property management SaaS built with Next.
 
 ```
 /
-├── app/
-│   ├── layout.tsx                    # Root layout with PWA meta
-│   ├── page.tsx                      # Auth redirect entry point
-│   ├── login/page.tsx                # Role-based login
-│   ├── apply/page.tsx                # 4-stage public applicant wizard
-│   ├── dashboard/
-│   │   ├── layout.tsx                # Shared sidebar layout
-│   │   ├── landlord/page.tsx         # Landlord dashboard
-│   │   ├── caretaker/page.tsx        # Caretaker dashboard (no financials)
-│   │   └── tenant/page.tsx           # Tenant dashboard
-│   └── api/
-│       └── webhooks/paystack/route.ts # Secure Paystack webhook
-├── components/ui/
-│   ├── Sidebar.tsx                   # Navigation with badge counters
-│   ├── Receipt.tsx                   # Print-clean receipt component
-│   ├── TenancyAgreement.tsx          # 45-clause auto-populated agreement
-│   └── DigitalSignatureCanvas.tsx    # Draw / type / upload signature
-├── lib/supabase/
-│   ├── client.ts                     # Browser Supabase client
-│   ├── server.ts                     # Server + Admin Supabase clients
-│   └── schema.sql                    # Full PostgreSQL schema + RLS
-├── types/index.ts                    # TypeScript interfaces
-├── utils/index.ts                    # Formatting, helpers, CSV export
-├── styles/globals.css                # Tailwind + global styles
-└── public/
-    ├── manifest.json                 # PWA manifest
-    └── icons/                        # App icons (add your own)
+├── src/
+│   ├── app/
+│   │   ├── (dashboard)/              # Authenticated multi-role dashboards
+│   │   │   ├── dashboard/
+│   │   │   │   ├── applications/     # Tenant applications
+│   │   │   │   ├── messages/         # In-app messaging (realtime)
+│   │   │   │   ├── payments/         # Payment records & import
+│   │   │   │   ├── properties/       # Properties + units management
+│   │   │   │   ├── reports/          # Financial reports
+│   │   │   │   ├── settings/         # Preferences + push notifications
+│   │   │   │   ├── staff/            # Staff (caretaker) management
+│   │   │   │   ├── tenants/          # Tenant management + migrate
+│   │   │   │   └── tickets/          # Maintenance tickets
+│   │   │   ├── login/                # Role-aware login + OTP verify
+│   │   │   ├── register/             # Registration
+│   │   │   ├── onboarding/           # Multi-step application wizard
+│   │   │   ├── invite/               # Tenant invitation acceptance
+│   │   │   ├── setup/                # Initial admin setup
+│   │   │   ├── forgot-password/      # Password reset
+│   │   │   └── reset-password/
+│   │   ├── api/
+│   │   │   ├── auth/                 # Forgot password, SMS webhook
+│   │   │   ├── emails/send
+│   │   │   ├── notify/sms
+│   │   │   ├── payments/             # Import + approve
+│   │   │   ├── push/                 # Web Push subscribe/send
+│   │   │   ├── setup, staff/create
+│   │   │   ├── subscriptions/        # Plans + manage
+│   │   │   ├── tickets/[id]/update
+│   │   │   ├── upload
+│   │   │   └── webhooks/paystack     # HMAC-SHA512 verified webhook
+│   │   ├── layout.tsx                # Root layout + PWA meta
+│   │   ├── manifest.ts               # PWA manifest (/manifest.webmanifest)
+│   │   └── page.tsx                  # Entry point
+│   ├── components/                   # UI components (dashboard views, onboarding, settings)
+│   ├── contexts/                     # Role, Property, Theme contexts
+│   ├── lib/
+│   │   ├── config.ts                 # White-label brand config (env-driven)
+│   │   ├── csrf.ts / csrf-client.ts  # Double-submit cookie CSRF protection
+│   │   ├── env.ts                    # Env access + validation
+│   │   ├── paystack-client/server.ts # Paystack integration
+│   │   ├── push.ts                   # VAPID Web Push helpers
+│   │   ├── rateLimiter.ts            # Upstash / in-memory rate limiting
+│   │   └── supabase/
+│   │       ├── browser.ts            # Browser Supabase client
+│   │       ├── clientFactory.ts      # Server client factory
+│   │       └── invitations.ts        # Invitation helpers
+│   └── types/index.ts                # TypeScript interfaces
+├── supabase/
+│   ├── migrations/                   # Ordered SQL migrations + RLS policies
+│   └── apply-migrations.ps1
+├── public/sw.js                      # Hand-written service worker
+├── src/proxy.ts                      # Middleware: route guard + CSRF cookie
+├── next.config.ts                    # CSP + PWA headers
+└── vercel.json
 ```
 
 ---
@@ -58,8 +91,8 @@ A production-grade, secure, multi-role property management SaaS built with Next.
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/princesteve-residence.git
-cd princesteve-residence
+git clone YOUR_REPO_URL estate-manager
+cd estate-manager
 npm install
 ```
 
@@ -68,7 +101,7 @@ npm install
 1. Go to [supabase.com](https://supabase.com) → New project
 2. Copy your **Project URL** and **Anon key** from Settings → API
 3. Copy your **Service Role key** (keep this secret — server only)
-4. Go to **SQL Editor** → paste the contents of `lib/supabase/schema.sql` → Run
+4. Run the migrations in `supabase/migrations/` in order (via the SQL Editor or the included `apply-migrations.ps1`). All tables ship with RLS policies.
 
 ### 3. Configure environment variables
 
@@ -76,58 +109,37 @@ npm install
 cp .env.local.example .env.local
 ```
 
-Fill in:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_test_46d83d4877d760e148a943152cdbdaf04154d4e3
-PAYSTACK_SECRET_KEY=your_paystack_secret_key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+Fill in all values — see the example file for the complete list, including the white-label `NEXT_PUBLIC_BRAND_*` variables.
 
-### 4. Create user accounts in Supabase
-
-Go to Supabase → Authentication → Users → Add user
-
-Create three users:
-- **Landlord**: `landlord@princesteve.ng` + password
-- **Caretaker**: `steve@princesteve.ng` + password
-- **Tenant**: `tenant@princesteve.ng` + password
-
-Then go to SQL Editor and run:
-```sql
--- After creating users, assign roles (replace UUIDs with real user IDs)
-INSERT INTO profiles (user_id, role, full_name, phone) VALUES
-  ('UUID_OF_LANDLORD',  'landlord',  'Mrs. Ibadin R.E', '+2348054164910'),
-  ('UUID_OF_CARETAKER', 'caretaker', 'Steve',           '+2348024427735'),
-  ('UUID_OF_TENANT',    'tenant',    'Adebayo Okafor',  '08031234567');
-```
-
-### 5. Configure Paystack webhook
-
-1. Go to [dashboard.paystack.com](https://dashboard.paystack.com) → Settings → API Keys & Webhooks
-2. Set webhook URL to: `https://YOUR_VERCEL_URL.vercel.app/api/webhooks/paystack`
-3. Copy your secret key into `PAYSTACK_SECRET_KEY`
-
-### 6. Run development server
+### 4. Run development server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000). Complete the initial admin setup at `/setup`.
+
+---
+
+## Quality Gates
+
+```bash
+npm run typecheck   # tsc --noEmit
+npm run lint        # eslint .
+npm run test        # vitest run
+npm run build       # next build
+```
+
+All four gates must pass before release.
 
 ---
 
 ## Deploy to Vercel
 
-```bash
-npm install -g vercel
-vercel
-```
-
-Add all environment variables in Vercel Dashboard → Project → Settings → Environment Variables.
+1. Push the repository to GitHub and import into Vercel.
+2. Add all variables from `.env.local.example` in Project → Settings → Environment Variables (mark server-only ones as private).
+3. Configure the Paystack webhook to `https://YOUR_VERCEL_URL.vercel.app/api/webhooks/paystack`.
+4. Deploy.
 
 ---
 
@@ -158,29 +170,21 @@ Add all environment variables in Vercel Dashboard → Project → Settings → E
 
 **Integrity**
 - Paystack webhook signature verified with HMAC-SHA512
-- Receipt numbers generated by PostgreSQL trigger — never on frontend
-- Paystack secret key lives only in server environment variables
-- Supabase Service Role key never exposed to browser
+- Receipt numbers generated by PostgreSQL sequence — never on frontend
+- CSRF double-submit cookie protection on all state-changing API routes
+- Paystack secret key / Supabase service role key live only in server environment variables
 
 **Availability**
 - Vercel edge deployment (global CDN)
 - PWA with service worker caching for offline resilience
-- Supabase free tier: 500MB DB, 1GB bandwidth, 50,000 MAU
+- Optional distributed rate limiting via Upstash Redis
 
 ---
 
-## Phase 2 Upgrades (When Ready)
+## Phase 2 Upgrades
 
-- [ ] Add eBulk SMS real delivery for stage notifications
-- [ ] Supabase Storage for photo/document uploads (replace base64)
-- [ ] Push notifications via Web Push API
-- [ ] Multi-property support per landlord account
-- [ ] Paystack subscription billing for SaaS model
-
----
-
-## Support
-
-Property: 35 Godilove Street, Akowonjo Egbeda, Lagos  
-Emergency: +2348054164910  
-Caretaker (Steve): +2348024427735
+- [x] Push notifications via Web Push API
+- [ ] eBulkSMS real delivery for stage notifications
+- [ ] Migrate base64 photo/document storage to Supabase Storage
+- [ ] Support for multiple properties per landlord account
+- [ ] Paystack subscription billing

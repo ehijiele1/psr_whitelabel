@@ -3,11 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { useEffect, useState, useCallback, use } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
   ArrowLeft, Building2, MapPin, Edit, Trash2, Home, Users, Receipt, Plus
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { brand } from "@/lib/config"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -60,6 +62,7 @@ interface Payment {
 }
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const router = useRouter()
   const supabase = createClient()
 
   const [activeTab, setActiveTab] = useState("overview")
@@ -166,7 +169,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       return
     }
     toast.success("Property deleted")
-    window.location.href = "/dashboard/properties"
+    router.push("/dashboard/properties")
   }
 
   const handleOpenAddUnit = () => {
@@ -246,9 +249,9 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     .reduce((sum, u) => sum + u.monthly_rent, 0)
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-NG", {
+    return new Intl.NumberFormat(brand.locale, {
       style: "currency",
-      currency: "NGN",
+      currency: brand.currencyCode,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
@@ -523,7 +526,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="unit-rent">Monthly Rent (₦)</Label>
+                        <Label htmlFor="unit-rent">Monthly Rent ({brand.currencySymbol})</Label>
                         <Input
                           id="unit-rent"
                           type="number"
@@ -534,7 +537,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="unit-deposit">Deposit Amount (₦)</Label>
+                        <Label htmlFor="unit-deposit">Deposit Amount ({brand.currencySymbol})</Label>
                         <Input
                           id="unit-deposit"
                           type="number"

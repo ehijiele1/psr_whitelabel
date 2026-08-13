@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Search,
@@ -58,19 +58,16 @@ export default function MessagesPage() {
   const [newMessageOpen, setNewMessageOpen] = useState(false)
   const [tenants, setTenants] = useState<TenantItem[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  let supabase: ReturnType<typeof createClient> | undefined
-  if (typeof window !== 'undefined') {
-    supabase = createClient()
-  }
+  const supabase = useMemo(() => createClient(), [])
 
   const activeConv = conversations.find((c) => c.partnerId === selectedConvId)
 
   useEffect(() => {
     ;(async () => {
-      const { data: { user } } = await supabase!.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
 
-      const { data: profile } = await supabase!
+      const { data: profile } = await supabase
         .from("profiles")
         .select("role, user_id")
         .eq("user_id", user.id)
@@ -81,7 +78,7 @@ export default function MessagesPage() {
       setUserId(profileUserId)
       setUserRole(role)
 
-      const { data: msgs } = await supabase!
+      const { data: msgs } = await supabase
         .from("messages")
         .select("*")
         .or(`sender_id.eq.${profileUserId},receiver_id.eq.${profileUserId}`)
@@ -101,7 +98,7 @@ export default function MessagesPage() {
         grouped.get(otherId)!.push(msg)
       }
 
-      const { data: profiles } = await supabase!
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", Array.from(otherIds))
@@ -124,12 +121,12 @@ export default function MessagesPage() {
       setConversations(convs)
       setLoading(false)
     })()
-  }, [supabase!])
+  }, [supabase])
 
   useEffect(() => {
     if (!userId) return
 
-    const channel = supabase!
+    const channel = supabase
       .channel("messages")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, async (payload) => {
         const msg = payload.new as Message
@@ -147,7 +144,7 @@ export default function MessagesPage() {
           return [...prev, { partnerId: otherId, partnerName: "New", partnerInitials: "??", lastMessage: msg.message, lastTime: "now", messages: [msg] }]
         })
 
-        const { data: profile } = await supabase!.from("profiles").select("full_name").eq("user_id", otherId).single()
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", otherId).single()
         if (profile) {
           setConversations((prev) =>
             prev.map((c) => {
@@ -160,8 +157,8 @@ export default function MessagesPage() {
       })
       .subscribe()
 
-    return () => { supabase!.removeChannel(channel) }
-  }, [userId, supabase!])
+    return () => { supabase.removeChannel(channel) }
+  }, [userId, supabase])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -169,7 +166,7 @@ export default function MessagesPage() {
 
   const handleSend = async () => {
     if (!messageInput.trim() || !selectedConvId || !userId) return
-    const { error } = await supabase!.from("messages").insert({
+    const { error } = await supabase.from("messages").insert({
       sender_id: userId,
       receiver_id: selectedConvId,
       message: messageInput,
@@ -212,7 +209,7 @@ export default function MessagesPage() {
 
   const openNewMessage = useCallback(async () => {
     setNewMessageOpen(true)
-    const { data } = await supabase!
+    const { data } = await supabase
       .from("tenants")
       .select("user_id, profiles(full_name), units(name)")
 
@@ -237,7 +234,7 @@ export default function MessagesPage() {
       }
       setTenants(mapped)
     }
-  }, [supabase!])
+  }, [supabase])
 
   const isAdmin = userRole && ["landlord", "caretaker"].includes(userRole)
   const filteredConversations = conversations.filter((c) =>

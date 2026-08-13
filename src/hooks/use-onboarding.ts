@@ -9,6 +9,7 @@ import { useState, useCallback } from "react"
 import { toast } from "sonner"
 import { useAutosave } from "@/hooks/use-autosave"
 import { createClient } from "@/lib/supabase/browser"
+import type { User } from "@supabase/supabase-js"
 
 interface SubmissionData {
   fullName: string
@@ -25,7 +26,7 @@ interface UseOnboardingReturn {
   creatingAccount: boolean
   submittedData: SubmissionData
   appRef: string
-  ensureUser: () => Promise<any>
+  ensureUser: () => Promise<User | null>
   uploadPendingFiles: (userId: string) => Promise<string[]>
   handleStepChange: (nextStep: number) => Promise<void>
   handleSubmit: () => Promise<void>

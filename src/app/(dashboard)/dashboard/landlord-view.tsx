@@ -11,6 +11,7 @@ import QuickActions from "@/components/dashboard/quick-actions"
 import MaintenanceAlerts from "@/components/dashboard/maintenance-alerts"
 import { createClient } from "@/lib/supabase/browser"
 import { useProperty } from "@/contexts/PropertyContext"
+import { brand } from "@/lib/config"
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -31,10 +32,13 @@ export default function LandlordDashboard() {
 
   useEffect(() => {
     if (!activePropertyId) return
-    setLoading(true)
+    const active = true
 
     ;(async () => {
       try {
+        await Promise.resolve()
+        if (!active) return
+        setLoading(true)
         const responses = await Promise.allSettled([
           supabase.from("properties").select("id", { count: "exact", head: true }),
           supabase.from("tenants").select("id", { count: "exact", head: true }).eq("status", "active").eq("property_id", activePropertyId),
@@ -91,7 +95,7 @@ export default function LandlordDashboard() {
       } catch (err) {
         console.error('Failed to fetch landlord dashboard data:', err)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     })()
   }, [activePropertyId, supabase])
@@ -146,14 +150,14 @@ export default function LandlordDashboard() {
         <KpiCard
           title="Total Revenue"
           value={stats.totalRevenue}
-          prefix="₦"
+          prefix={brand.currencySymbol}
           icon={<TrendingUp className="w-5 h-5" />}
           delay={0.1}
         />
         <KpiCard
           title="Pending Payments"
           value={stats.pendingPayments}
-          prefix="₦"
+          prefix={brand.currencySymbol}
           icon={<Clock className="w-5 h-5" />}
           delay={0.15}
         />

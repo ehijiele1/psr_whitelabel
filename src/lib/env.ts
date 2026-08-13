@@ -1,3 +1,5 @@
+import { brandServer } from "@/lib/config"
+
 export function getEnv(key: string): string {
   const value = process.env[key]
   if (value === undefined) {
@@ -72,7 +74,7 @@ export const env = {
   ebulkSmsUsername: getOptionalEnv("EBULK_SMS_USERNAME"),
   ebulkSmsApiKey: getOptionalEnv("EBULK_SMS_API_KEY"),
   resendApiKey: getOptionalEnv("RESEND_API_KEY"),
-  emailFrom: getOptionalEnv("EMAIL_FROM") || "PrinceSteve Residence <noreply@vanniejay.com.ng>",
+  emailFrom: getOptionalEnv("EMAIL_FROM") || brandServer.emailFrom,
   
   // Upstash Redis for rate limiting (optional but recommended for production)
   upstashRedisRestUrl: getOptionalEnv("UPSTASH_REDIS_REST_URL"),

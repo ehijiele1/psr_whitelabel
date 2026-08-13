@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { brand } from "@/lib/config"
 
 export default function Hero() {
   return (
@@ -10,16 +11,16 @@ export default function Hero() {
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          THE BEST OR NOTHING
+          {brand.tagline}
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#111111] dark:text-white leading-tight tracking-tight max-w-4xl mx-auto">
           Property management, done the{" "}
-          <span className="text-[#005A36] dark:text-[#00a85e]">PrinceSteve</span> way.
+          <span className="text-[#005A36] dark:text-[#00a85e]">{brand.name}</span> way.
         </h1>
 
         <p className="mt-6 text-base sm:text-lg text-[#555555] dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-          Manage tenants, rent collection, utility billing, maintenance and messaging across all your properties — in Naira, from one beautiful dashboard.
+          Manage tenants, rent collection, utility billing, maintenance and messaging across all your properties — in {brand.currencyCode}, from one beautiful dashboard.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">

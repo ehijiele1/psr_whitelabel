@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { FileText, CheckCircle } from "lucide-react"
+import { brand } from "@/lib/config"
 
 interface AgreementReviewProps {
   data: {
@@ -56,6 +57,7 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
   const rentAmount = data.agreement.rentAmount || "[Rent Amount]"
   const securityDeposit = data.agreement.securityDeposit || "[Security Deposit]"
   const termDuration = data.agreement.termDuration || "1 year"
+  const landlordLabel = `${brand.landlordName} (the \u201c${brand.landlordTitle}\u201d)`
 
   return (
     <motion.div
@@ -92,39 +94,39 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
                 THIS LEASE (the &ldquo;Lease&rdquo;) dated this {today}
               </p>
               <p>BETWEEN:</p>
-              <p className="font-medium text-foreground">Mrs. Ibadin R.E (the &ldquo;Landlady&rdquo;)</p>
+              <p className="font-medium text-foreground">{landlordLabel}</p>
               <p>AND:</p>
               <p className="font-medium text-foreground">{tenantName} (the &ldquo;Tenant&rdquo;)</p>
               <p>AND:</p>
               <p className="font-medium text-foreground">{guarantorName} (the &ldquo;Guarantor&rdquo;)</p>
               <p className="text-xs text-muted-foreground">(individually the &ldquo;Party&rdquo; and collectively the &ldquo;Parties&rdquo;)</p>
 
-              <p className="pt-2">IN CONSIDERATION of the Landlady leasing certain premises to the Tenant and other valuable consideration, the receipt and sufficiency of which consideration is acknowledged, the Parties agree as follows:</p>
+              <p className="pt-2">IN CONSIDERATION of the {brand.landlordTitle} leasing certain premises to the Tenant and other valuable consideration, the receipt and sufficiency of which consideration is acknowledged, the Parties agree as follows:</p>
 
               <p className="font-medium text-foreground pt-1">Leased Property</p>
-              <p>1. The Landlady agrees to rent to the Tenant the flat, municipally described as 35 Godilove Street, Akowonjo, Egbeda, Lagos (the &ldquo;Property&rdquo;), for use as residential premises only. The Property is more particularly described as: A Yellow and Brown building with black gate.</p>
-              <p>2. No guest(s) of the Tenant may occupy the Property for longer than one week without the prior consent of the Landlady.</p>
-              <p>3. No pets or animals are allowed without prior written permission of the Landlady.</p>
-              <p>4. Car park space is limited; no vehicle may park without consent of the Landlady.</p>
+              <p>1. The {brand.landlordTitle} agrees to rent to the Tenant the flat, municipally described as {brand.propertyAddress} (the &ldquo;Property&rdquo;), for use as residential premises only. The Property is more particularly described as: {brand.propertyDescription}.</p>
+              <p>2. No guest(s) of the Tenant may occupy the Property for longer than one week without the prior consent of the {brand.landlordTitle}.</p>
+              <p>3. No pets or animals are allowed without prior written permission of the {brand.landlordTitle}.</p>
+              <p>4. Car park space is limited; no vehicle may park without consent of the {brand.landlordTitle}.</p>
               <p>5. The Property is provided without any furnishings or chattels.</p>
 
               <p className="font-medium text-foreground pt-1">Term</p>
-              <p>6. The term of the Lease is a periodic tenancy commencing at 12:00 noon on {moveInDate} and continuing on a {termDuration} basis until the Landlady or the Tenant terminates the tenancy (the &ldquo;Term&rdquo;).</p>
-              <p>7. If the tenant is in default, upon 30 days notice the Landlady may terminate this tenancy, exercise rights of distress, or exercise any other available rights at law.</p>
+              <p>6. The term of the Lease is a periodic tenancy commencing at 12:00 noon on {moveInDate} and continuing on a {termDuration} basis until the {brand.landlordTitle} or the Tenant terminates the tenancy (the &ldquo;Term&rdquo;).</p>
+              <p>7. If the tenant is in default, upon 30 days notice the {brand.landlordTitle} may terminate this tenancy, exercise rights of distress, or exercise any other available rights at law.</p>
 
               <p className="font-medium text-foreground pt-1">Rent</p>
-              <p>8. Subject to the provisions of this Lease, the rent for the Property is ₦{formatAmount(rentAmount)}.00 per year (the &ldquo;Rent&rdquo;).</p>
-              <p>9. The Tenant will pay the Rent on or before the anniversary of every year of the Term by cash or direct transfer or deposit to the account supplied by the Landlady.</p>
-              <p>10. The Landlady may review the rent and provide a minimum of 120 days notice to increase the rent.</p>
+              <p>8. Subject to the provisions of this Lease, the rent for the Property is {brand.currencySymbol}{formatAmount(rentAmount)}.00 per year (the &ldquo;Rent&rdquo;).</p>
+              <p>9. The Tenant will pay the Rent on or before the anniversary of every year of the Term by cash or direct transfer or deposit to the account supplied by the {brand.landlordTitle}.</p>
+              <p>10. The {brand.landlordTitle} may review the rent and provide a minimum of 120 days notice to increase the rent.</p>
 
               <p className="font-medium text-foreground pt-1">Security Deposit</p>
-              <p>11. On execution of this Lease, the Tenant will pay the Landlady a security deposit of ₦{formatAmount(securityDeposit)}.00 (the &ldquo;Security&rdquo;).</p>
+              <p>11. On execution of this Lease, the Tenant will pay the {brand.landlordTitle} a security deposit of {brand.currencySymbol}{formatAmount(securityDeposit)}.00 (the &ldquo;Security&rdquo;).</p>
 
               <p className="font-medium text-foreground pt-1">Sureties</p>
-              <p>14. The Guarantor, {guarantorName} of {guarantorAddress}, guarantees to the Landlady that the Tenant will comply with the Tenant&rsquo;s obligations under this Lease.</p>
+              <p>14. The Guarantor, {guarantorName} of {guarantorAddress}, guarantees to the {brand.landlordTitle} that the Tenant will comply with the Tenant&rsquo;s obligations under this Lease.</p>
 
               <p className="font-medium text-foreground pt-1">General Provisions</p>
-              <p>40. All monetary amounts are based in the Nigerian Naira.</p>
+              <p>40. All monetary amounts are based in {brand.currencyCode}.</p>
               <p>41. This Lease may only be amended by a written document executed by the Parties.</p>
               <p>42. Electronic signatures are binding and considered original signatures.</p>
               <p>43. This Lease constitutes the entire agreement between the Parties.</p>
@@ -147,7 +149,7 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Annual Rent (₦)</Label>
+              <Label className="text-xs text-muted-foreground">Annual Rent ({brand.currencySymbol})</Label>
               <Input
                 type="number"
                 placeholder="e.g. 1500000"
@@ -157,7 +159,7 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Security Deposit (₦)</Label>
+              <Label className="text-xs text-muted-foreground">Security Deposit ({brand.currencySymbol})</Label>
               <Input
                 type="number"
                 placeholder="e.g. 500000"
@@ -221,7 +223,7 @@ export default function AgreementReview({ data, onChange }: AgreementReviewProps
           <div>
             <span className="text-sm font-medium">I accept the terms of the lease agreement</span>
             <p className="text-xs text-muted-foreground mt-0.5">
-              By checking this box, you agree to the Residential Tenancy Agreement above and authorize the Landlady to proceed with your application.
+              By checking this box, you agree to the Residential Tenancy Agreement above and authorize the {brand.landlordTitle} to proceed with your application.
             </p>
           </div>
         </label>

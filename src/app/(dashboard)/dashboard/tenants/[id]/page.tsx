@@ -61,9 +61,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createClient } from "@/lib/supabase/browser"
 import { toast } from "sonner"
 import DocumentsTab from "@/components/tenants/documents-tab"
+import { brand } from "@/lib/config"
 
 function formatCurrency(amount: number) {
-  return "₦" + amount.toLocaleString("en-US")
+  return brand.currencySymbol + amount.toLocaleString("en-US")
 }
 
 function formatDate(dateStr: string | null | undefined) {

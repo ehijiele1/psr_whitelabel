@@ -296,7 +296,7 @@ export async function validateFormData<T>(
     }
 
     return validateSchema(schema, data);
-  } catch (err) {
+  } catch {
     return { success: false, error: 'Invalid form data' };
   }
 }
@@ -309,7 +309,7 @@ export function createValidator<T>(schema: z.ZodSchema<T>) {
     try {
       const body = await req.json();
       return validateSchema(schema, body);
-    } catch (err) {
+    } catch {
       return { success: false, error: 'Invalid JSON body' };
     }
   };

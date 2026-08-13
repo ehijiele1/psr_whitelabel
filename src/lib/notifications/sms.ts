@@ -1,9 +1,14 @@
 import { env } from "@/lib/env"
+import { brand, brandServer } from "@/lib/config"
 import { fetchWithRetry } from "@/lib/fetch"
 
 const EBULK_API_URL = "https://api.ebulksms.com/v2/sms/send"
-const SENDER = "PrinceSteve"
+const SENDER = brandServer.smsSender
 const SMS_TIMEOUT = 10000 // 10 seconds
+
+function currency(amount: number): string {
+  return `${brand.currencySymbol}${amount.toLocaleString(brand.locale)}`
+}
 
 async function sendSms(
   phone: string,
@@ -70,7 +75,7 @@ export async function sendInviteSms(
 ): Promise<{ success: boolean; error?: string }> {
   return sendSms(
     phone,
-    `Dear ${tenantName}, you have been invited to join PrinceSteve Residence. Click here to complete your registration: ${inviteUrl}`
+    `Dear ${tenantName}, you have been invited to join ${brand.name}. Click here to complete your registration: ${inviteUrl}`
   )
 }
 
@@ -82,7 +87,7 @@ export async function sendRentReminder(
 ): Promise<{ success: boolean; error?: string }> {
   return sendSms(
     phone,
-    `Dear ${tenantName}, this is a reminder that your rent of ₦${amount.toLocaleString()} is due on ${dueDate}. Please make payment to avoid late fees. - PrinceSteve Residence`
+    `Dear ${tenantName}, this is a reminder that your rent of ${currency(amount)} is due on ${dueDate}. Please make payment to avoid late fees. - ${brand.name}`
   )
 }
 
@@ -94,7 +99,7 @@ export async function sendPaymentConfirmation(
 ): Promise<{ success: boolean; error?: string }> {
   return sendSms(
     phone,
-    `Dear ${tenantName}, your payment of ₦${amount.toLocaleString()} (Ref: ${reference}) has been received. Thank you! - PrinceSteve Residence`
+    `Dear ${tenantName}, your payment of ${currency(amount)} (Ref: ${reference}) has been received. Thank you! - ${brand.name}`
   )
 }
 
@@ -106,7 +111,7 @@ export async function sendTicketUpdate(
 ): Promise<{ success: boolean; error?: string }> {
   return sendSms(
     phone,
-    `Dear ${tenantName}, your ticket ${ticketId} has been updated to "${status}". - PrinceSteve Residence`
+    `Dear ${tenantName}, your ticket ${ticketId} has been updated to "${status}". - ${brand.name}`
   )
 }
 
@@ -116,7 +121,7 @@ export async function sendApplicationApproved(
 ): Promise<{ success: boolean; error?: string }> {
   return sendSms(
     phone,
-    `Congratulations ${tenantName}! Your PrinceSteve Residence application has been approved. Please log in to your portal to review and sign your lease agreement.`
+    `Congratulations ${tenantName}! Your ${brand.name} application has been approved. Please log in to your portal to review and sign your lease agreement.`
   )
 }
 
@@ -127,7 +132,7 @@ export async function sendApplicationRejected(
 ): Promise<{ success: boolean; error?: string }> {
   return sendSms(
     phone,
-    `Dear ${tenantName}, your PrinceSteve Residence application has been reviewed.${reason ? ` Reason: ${reason}` : ""} Please contact management for more details.`
+    `Dear ${tenantName}, your ${brand.name} application has been reviewed.${reason ? ` Reason: ${reason}` : ""} Please contact management for more details.`
   )
 }
 
@@ -137,7 +142,7 @@ export async function sendApplicationReceived(
 ): Promise<{ success: boolean; error?: string }> {
   return sendSms(
     phone,
-    `Dear ${tenantName}, your PrinceSteve Residence application has been received. We will review and get back to you shortly.`
+    `Dear ${tenantName}, your ${brand.name} application has been received. We will review and get back to you shortly.`
   )
 }
 
@@ -147,6 +152,6 @@ export async function sendAgreementSigned(
 ): Promise<{ success: boolean; error?: string }> {
   return sendSms(
     phone,
-    `Dear ${tenantName}, your tenancy agreement has been signed successfully. The landlord will review and activate your dashboard access soon. - PrinceSteve Residence`
+    `Dear ${tenantName}, your tenancy agreement has been signed successfully. The landlord will review and activate your dashboard access soon. - ${brand.name}`
   )
 }

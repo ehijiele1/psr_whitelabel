@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2, GripVertical } from "lucide-react"
+import { brand } from "@/lib/config"
 
 interface UnitConfig {
   name: string
@@ -147,8 +148,8 @@ export default function UnitsStep({ data, onChange }: UnitsStepProps) {
             <>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2 bg-muted/30 rounded-lg text-xs font-medium text-muted-foreground">
                 <span>Unit Name</span>
-                <span>Monthly Rent (₦)</span>
-                <span>Deposit (₦)</span>
+                <span>Monthly Rent ({brand.currencySymbol})</span>
+                <span>Deposit ({brand.currencySymbol})</span>
                 <span className="sm:hidden" />
               </div>
 
@@ -207,7 +208,7 @@ export default function UnitsStep({ data, onChange }: UnitsStepProps) {
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">LAWMA (₦)</Label>
+                    <Label className="text-xs">LAWMA ({brand.currencySymbol})</Label>
                     <Input
                       type="number"
                       placeholder="e.g. 5000"
@@ -222,7 +223,7 @@ export default function UnitsStep({ data, onChange }: UnitsStepProps) {
                   </div>
                   {group.type === "apartment" && (
                     <div className="space-y-1">
-                      <Label className="text-xs">Sanitation (₦)</Label>
+                      <Label className="text-xs">Sanitation ({brand.currencySymbol})</Label>
                       <Input
                         type="number"
                         placeholder="e.g. 3000"
@@ -235,7 +236,7 @@ export default function UnitsStep({ data, onChange }: UnitsStepProps) {
                   )}
                   {group.type === "apartment" && (
                     <div className="space-y-1">
-                      <Label className="text-xs">LUC (₦) — per unit</Label>
+                      <Label className="text-xs">LUC ({brand.currencySymbol}) — per unit</Label>
                       <p className="text-[10px] text-muted-foreground">
                         Set individually below. Leave 0 if not applicable.
                       </p>

@@ -21,10 +21,9 @@ export default function SessionTimeout() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const resetTimer = useCallback(() => {
+  const scheduleTimers = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
     if (warningRef.current) clearTimeout(warningRef.current)
-    setShowWarning(false)
 
     warningRef.current = setTimeout(() => {
       setShowWarning(true)
@@ -37,17 +36,22 @@ export default function SessionTimeout() {
     }, IDLE_TIMEOUT_MS)
   }, [router])
 
+  const resetTimer = useCallback(() => {
+    setShowWarning(false)
+    scheduleTimers()
+  }, [scheduleTimers])
+
   useEffect(() => {
     const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart", "click"]
     const handleActivity = () => resetTimer()
     events.forEach((event) => window.addEventListener(event, handleActivity))
-    resetTimer()
+    scheduleTimers()
     return () => {
       events.forEach((event) => window.removeEventListener(event, handleActivity))
       if (timerRef.current) clearTimeout(timerRef.current)
       if (warningRef.current) clearTimeout(warningRef.current)
     }
-  }, [resetTimer])
+  }, [resetTimer, scheduleTimers])
 
   const extendSession = () => {
     resetTimer()

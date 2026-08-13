@@ -1,5 +1,6 @@
 import { createClient as createBrowserClient } from "./browser"
 import { sendInviteSms } from "@/lib/notifications/sms"
+import { brand, generateInviteCode } from "@/lib/config"
 import { randomBytes } from 'node:crypto'
 
 // HTML escape function to prevent XSS in email templates
@@ -15,7 +16,7 @@ function escapeHtml(text: string): string {
 // Generate cryptographically secure token
 function generateInvitationToken(): string {
   const bytes = randomBytes(16).toString('base64url')
-  return `PSR-INV-${Date.now().toString(36)}-${bytes.slice(0, 8)}`
+  return `${generateInviteCode()}-${bytes.slice(0, 8)}`
 }
 
 export async function getInvitationByToken(token: string) {
@@ -117,22 +118,22 @@ export async function createInvitation(data: {
 
   if (data.email) {
     try {
-      await fetch("/api/emails/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: data.email,
-          subject: "You're Invited! Join PrinceSteve Residence",
-          html: `
+      await supabase.from("email_queue").insert({
+        to: data.email,
+        subject: `You're Invited! Join ${brand.name}`,
+        html_body: `
             <div style="font-family: sans-serif; color: #333;">
-              <h2>Welcome to PrinceSteve Residence!</h2>
+              <h2>Welcome to ${brand.name}!</h2>
               <p>Dear ${sanitizedFullName},</p>
               <p>You have been invited to register for your tenant account.</p>
               <p><a href="${inviteUrl}">Click here to complete your registration</a></p>
               <p>This link expires in 7 days.</p>
             </div>
           `,
-        }),
+        text_body: `Welcome to ${brand.name}! Dear ${sanitizedFullName}, you have been invited to register for your tenant account. Click here to complete your registration: ${inviteUrl}. This link expires in 7 days.`,
+        status: "pending",
+        created_at: new Date().toISOString(),
+        created_by: user.user.id,
       })
     } catch {
       console.warn("[Invitations] Failed to queue invitation email")

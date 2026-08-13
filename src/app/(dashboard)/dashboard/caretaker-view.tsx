@@ -17,7 +17,9 @@ export default function CaretakerDashboard() {
     pendingPayments: 0,
     unreadMessages: 0,
   })
-  const [recentTickets, setRecentTickets] = useState<any[]>([])
+  const [recentTickets, setRecentTickets] = useState<
+    Array<{ id: string; title: string; priority: string; status: string; created_at: string }>
+  >([])
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {

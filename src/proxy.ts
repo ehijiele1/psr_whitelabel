@@ -1,5 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { ensureCsrfToken } from "@/lib/csrf"
+
+function withCsrf(request: NextRequest, response: NextResponse): NextResponse {
+  ensureCsrfToken(request, response)
+  return response
+}
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
@@ -60,23 +66,23 @@ export async function proxy(request: NextRequest) {
   const isOnboarding = path.startsWith("/onboarding")
 
   // Allow authenticated users to access the reset-password page.
-  if (isResetPassword && user) return response
+  if (isResetPassword && user) return withCsrf(request, response)
 
   // Redirect unauthenticated users trying to access protected routes.
   if (!user) {
     if (isDashboard || isOnboarding) {
       const url = request.nextUrl.clone()
       url.pathname = "/login"
-      return NextResponse.redirect(url)
+      return withCsrf(request, NextResponse.redirect(url))
     }
-    return response
+    return withCsrf(request, response)
   }
 
   // Redirect already-authenticated users away from auth pages.
   if (user && (isAuthRoute || isResetPassword)) {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
-    return NextResponse.redirect(url)
+    return withCsrf(request, NextResponse.redirect(url))
   }
 
   // ── Role-based access control for dashboard routes ───────────────────────
@@ -91,7 +97,7 @@ export async function proxy(request: NextRequest) {
       // No profile — send to setup wizard.
       const url = request.nextUrl.clone()
       url.pathname = "/setup"
-      return NextResponse.redirect(url)
+      return withCsrf(request, NextResponse.redirect(url))
     }
 
     const userRole = profile.role as string
@@ -127,7 +133,7 @@ export async function proxy(request: NextRequest) {
       if (blocked.some((p) => path.startsWith(p))) {
         const url = request.nextUrl.clone()
         url.pathname = fallback
-        return NextResponse.redirect(url)
+        return withCsrf(request, NextResponse.redirect(url))
       }
     }
 
@@ -135,12 +141,12 @@ export async function proxy(request: NextRequest) {
       if (landlordOnly.some((p) => path.startsWith(p))) {
         const url = request.nextUrl.clone()
         url.pathname = fallback
-        return NextResponse.redirect(url)
+        return withCsrf(request, NextResponse.redirect(url))
       }
     }
   }
 
-  return response
+  return withCsrf(request, response)
 }
 
 export const config = {

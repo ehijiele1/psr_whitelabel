@@ -62,7 +62,6 @@ export async function rateLimit(
   windowMs: number = 60_000
 ): Promise<RateLimitResult> {
   const now = Date.now()
-  const windowStart = now - windowMs
   const key = `ratelimit:${identifier}`
 
   if (redis) {
@@ -81,7 +80,6 @@ export async function rateLimit(
 
     // Increment count and set expiry
     const newCount = currentCountValue + 1
-    const expiresAt = Math.floor((now + windowMs) / 1000)
 
     if (newCount === 1) {
       // First request in window, set expiry

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import ThemeToggle from "@/components/ui/theme-toggle"
 import { createClient } from "@/lib/supabase/browser"
 import { getInvitationByToken, claimInvitation } from "@/lib/supabase/invitations"
+import { brand } from "@/lib/config"
 
 interface InvitationData {
   id: string
@@ -71,7 +72,7 @@ function InviteContent() {
 
     const supabase = createClient()
 
-    const email = invitation.email || `${invitation.phone}@invite.princessteve.app`
+    const email = invitation.email || `${invitation.phone}@example.com`
     const { error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -168,7 +169,7 @@ function InviteContent() {
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">You&apos;re Invited!</h1>
           <p className="text-sm text-muted-foreground">
-            Hi <strong>{invitation.full_name}</strong>, please set your password to join PrinceSteve Residence.
+            Hi <strong>{invitation.full_name}</strong>, please set your password to join {brand.name}.
           </p>
         </div>
 

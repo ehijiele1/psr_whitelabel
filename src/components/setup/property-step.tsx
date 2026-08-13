@@ -38,7 +38,7 @@ export default function PropertyStep({ data, onChange }: PropertyStepProps) {
         <Label htmlFor="propName">Property Name</Label>
         <Input
           id="propName"
-          placeholder="e.g. PrinceSteve Heights"
+          placeholder="e.g. Maple Heights Estate"
           value={data.name}
           onChange={(e) => onChange({ name: e.target.value })}
           required
@@ -49,7 +49,7 @@ export default function PropertyStep({ data, onChange }: PropertyStepProps) {
         <Label htmlFor="propAddress">Address</Label>
         <Input
           id="propAddress"
-          placeholder="35 Godilove Street, Akowonjo, Egbeda, Lagos"
+          placeholder="12 Example Avenue, Your City"
           value={data.address}
           onChange={(e) => onChange({ address: e.target.value })}
           required
@@ -73,7 +73,7 @@ export default function PropertyStep({ data, onChange }: PropertyStepProps) {
 
       <div className="space-y-2 border-t pt-4">
         <Label>Rent Collection Preference</Label>
-        <p className="text-xs text-muted-foreground">Choose how you'd like to collect rent from tenants.</p>
+        <p className="text-xs text-muted-foreground">Choose how you&apos;d like to collect rent from tenants.</p>
         <div className="flex gap-3 mt-2">
           <button
             type="button"
@@ -97,7 +97,7 @@ export default function PropertyStep({ data, onChange }: PropertyStepProps) {
             }`}
           >
             <span className="block font-medium">Manual</span>
-            <span className="block text-xs text-muted-foreground mt-1">I'll collect rent offline and record it manually</span>
+            <span className="block text-xs text-muted-foreground mt-1">I&apos;ll collect rent offline and record it manually</span>
           </button>
         </div>
       </div>

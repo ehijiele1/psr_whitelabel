@@ -2,9 +2,24 @@ import crypto from "crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/clientFactory"
 import { setupSchema, validateSchema } from "@/lib/schemas"
+import { csrfProtection } from "@/lib/csrf"
+import { rateLimit, getIP } from "@/lib/rateLimiter"
 
 export async function POST(req: NextRequest) {
   try {
+    // CSRF: setup creates the owner account, so require a valid token.
+    const csrfResult = await csrfProtection(req)
+    if (!csrfResult.valid) {
+      return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 })
+    }
+
+    // Rate limit setup attempts per IP to slow down first-run hijacking.
+    const ip = getIP(req)
+    const rateLimitResult = await rateLimit(ip, 10, 60_000)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 })
+    }
+
     const body = await req.json()
     
     // Validate using Zod schema

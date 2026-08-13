@@ -1,8 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useCallback, useSyncExternalStore } from 'react';
 
 type Theme = 'professional' | 'premium';
+
+const STORAGE_KEY = 'psr_theme';
 
 interface ThemeContextType {
   theme: Theme;
@@ -12,24 +14,32 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('professional');
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('psr_theme') as Theme | null;
-    if (savedTheme) {
-      setThemeState(savedTheme);
+function getSnapshot(): Theme {
+  if (typeof window !== 'undefined') {
+    const savedTheme = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
+    if (savedTheme === 'professional' || savedTheme === 'premium') {
+      return savedTheme;
     }
+  }
+  return 'professional';
+}
+
+function subscribe(callback: () => void): () => void {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const theme = useSyncExternalStore<Theme>(subscribe, getSnapshot, () => 'professional');
+
+  const setTheme = useCallback((newTheme: Theme) => {
+    window.localStorage.setItem(STORAGE_KEY, newTheme);
+    window.dispatchEvent(new Event('storage'));
   }, []);
 
-  const toggleTheme = () => {
-    setThemeState(prev => prev === 'professional' ? 'premium' : 'professional');
-  };
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem('psr_theme', newTheme);
-  };
+  const toggleTheme = useCallback(() => {
+    setTheme(getSnapshot() === 'professional' ? 'premium' : 'professional');
+  }, [setTheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>

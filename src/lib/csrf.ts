@@ -1,128 +1,77 @@
-import { NextRequest } from 'next/server'
-import { createHmac, randomBytes } from 'crypto'
+import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 
-// In production, this MUST be set to a strong secret (32+ random bytes)
-const CSRF_SECRET = process.env.CSRF_SECRET
+// ─────────────────────────────────────────────────────────────────────────────
+// Double-submit cookie CSRF protection.
+//
+// The proxy middleware sets a non-HttpOnly `csrf-token` cookie on every page
+// response. Client code echoes the cookie value back in the `X-CSRF-Token`
+// header for state-changing requests. The server rejects the request unless
+// the header matches the cookie.
+//
+// Why this is safe:
+//   - The cookie is SameSite=Lax, so a cross-site form POST will not carry it.
+//   - Even if a malicious page could force a request, it cannot *read* the
+//     cookie value (SOP), so it cannot set the matching header.
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Token name for the cookie
-const CSRF_TOKEN_NAME = 'csrf-token'
+export const CSRF_COOKIE_NAME = 'csrf-token'
+export const CSRF_HEADER_NAME = 'x-csrf-token'
 
-// Token expiration: 1 hour (in seconds)
-const CSRF_TOKEN_EXPIRY = 60 * 60
-
-/**
- * Generate a cryptographically secure random string
- */
-function generateRandomString(length: number): string {
-  return randomBytes(length).toString('base64url').substring(0, length)
+function generateCsrfToken(): string {
+  return randomBytes(32).toString('base64url')
 }
 
 /**
- * Generate a CSRF token with HMAC signature
- * The token format is: base64url(payload) + '.' + base64url(hmac_signature)
+ * Ensure the request carries a CSRF cookie, setting one on the response if not.
+ * Called from the proxy middleware for every non-static response.
  */
-export function generateCSRFToken(): string {
-  // Validate that CSRF_SECRET is set in production
-  if (!CSRF_SECRET && process.env.NODE_ENV === 'production') {
-    throw new Error('CSRF_SECRET environment variable is required in production')
-  }
+export function ensureCsrfToken(request: NextRequest, response: NextResponse): void {
+  if (request.cookies.get(CSRF_COOKIE_NAME)?.value) return
 
-  const secret = CSRF_SECRET || 'dev-secret-' + generateRandomString(32)
-
-  const payload = {
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + CSRF_TOKEN_EXPIRY,
-    rnd: generateRandomString(16) // Cryptographically secure random value
-  }
-
-  // Encode payload as base64url
-  const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
-
-  // Create HMAC signature
-  const hmac = createHmac('sha256', secret)
-  hmac.update(payloadBase64)
-  const signature = hmac.digest('base64url')
-
-  // Return token as payload.signature
-  return `${payloadBase64}.${signature}`
+  response.cookies.set(CSRF_COOKIE_NAME, generateCsrfToken(), {
+    httpOnly: false,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+  })
 }
 
 /**
- * Verify a CSRF token by checking its HMAC signature
+ * Timing-safe comparison for CSRF tokens.
  */
-function verifyToken(token: string): boolean {
-  // Validate that CSRF_SECRET is set in production
-  if (!CSRF_SECRET && process.env.NODE_ENV === 'production') {
-    throw new Error('CSRF_SECRET environment variable is required in production')
-  }
-
-  const secret = CSRF_SECRET || 'dev-secret-' + generateRandomString(32)
-
-  try {
-    // Split token into payload and signature
-    const [payloadBase64, signature] = token.split('.')
-    if (!payloadBase64 || !signature) {
-      return false
-    }
-
-    // Verify HMAC signature
-    const hmac = createHmac('sha256', secret)
-    hmac.update(payloadBase64)
-    const expectedSignature = hmac.digest('base64url')
-
-    // Use timing-safe comparison to prevent timing attacks
-    if (!timingSafeEqual(Buffer.from(signature, 'base64url'), Buffer.from(expectedSignature, 'base64url'))) {
-      return false
-    }
-
-    // Parse and verify payload
-    const payloadStr = Buffer.from(payloadBase64, 'base64url').toString('utf8')
-    const payload = JSON.parse(payloadStr)
-
-    // Check expiration
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-      return false
-    }
-
-    return true
-  } catch (error) {
-    return false
-  }
-}
-
-/**
- * Timing-safe string comparison to prevent timing attacks
- */
-function timingSafeEqual(a: Buffer, b: Buffer): boolean {
-  if (a.length !== b.length) {
-    return false
-  }
-
+function safeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a)
+  const bBuf = Buffer.from(b)
+  if (aBuf.length !== bBuf.length) return false
   let result = 0
-  for (let i = 0; i < a.length; i++) {
-    result |= a[i] ^ b[i]
+  for (let i = 0; i < aBuf.length; i++) {
+    result |= aBuf[i] ^ bBuf[i]
   }
   return result === 0
 }
 
 /**
- * Middleware to validate CSRF token for state-changing operations
- * Expects the token in the X-CSRF-Token header or x-csrf-token header
+ * Validate a CSRF token for state-changing requests.
+ * Reads the cookie and the `X-CSRF-Token` header and requires an exact match.
  */
-export async function csrfProtection(req: NextRequest): Promise<{ valid: boolean, error?: string }> {
-  // Only check for state-changing methods
+export async function csrfProtection(req: NextRequest): Promise<{ valid: boolean; error?: string }> {
+  // Only enforce for state-changing methods.
   if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
     return { valid: true }
   }
 
-  // Get the token from header (case-insensitive)
-  const token = req.headers.get('x-csrf-token') || req.headers.get('X-CSRF-Token')
+  const cookieToken = req.cookies.get(CSRF_COOKIE_NAME)?.value
+  const headerToken = req.headers.get(CSRF_HEADER_NAME)
 
-  if (!token) {
+  if (!cookieToken || !headerToken) {
     return { valid: false, error: 'CSRF token missing' }
   }
 
-  // Verify the token
-  const isValid = verifyToken(token)
-  return { valid: isValid, error: isValid ? undefined : 'CSRF token invalid or expired' }
+  if (!safeEqual(cookieToken, headerToken)) {
+    return { valid: false, error: 'CSRF token invalid' }
+  }
+
+  return { valid: true }
 }

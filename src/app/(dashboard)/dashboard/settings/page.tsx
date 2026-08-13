@@ -5,11 +5,10 @@ import { motion } from "framer-motion"
 import { Bell, CreditCard, Save, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/browser"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
+import BrowserNotifications from "@/components/settings/browser-notifications"
 
 interface NotifPrefs {
   rent_reminders: boolean
@@ -125,6 +124,8 @@ export default function SettingsPage() {
           ))}
         </CardContent>
       </Card>
+
+      <BrowserNotifications />
 
       <Card>
         <CardContent className="p-6 space-y-4">

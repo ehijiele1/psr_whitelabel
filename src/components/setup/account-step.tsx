@@ -32,7 +32,7 @@ export default function AccountStep({ form, onChange }: AccountStepProps) {
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="fullName"
-            placeholder="Prince Steve"
+            placeholder="Jane Doe"
             className="pl-9"
             value={form.fullName}
             onChange={(e) => onChange({ fullName: e.target.value })}
@@ -48,7 +48,7 @@ export default function AccountStep({ form, onChange }: AccountStepProps) {
           <Input
             id="email"
             type="email"
-            placeholder="owner@princester.com"
+            placeholder="owner@example.com"
             className="pl-9"
             value={form.email}
             onChange={(e) => onChange({ email: e.target.value })}
@@ -63,8 +63,7 @@ export default function AccountStep({ form, onChange }: AccountStepProps) {
           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="phone"
-            placeholder="+234 800 000 0000"
-            className="pl-9"
+            placeholder="+234 800 000 0000"            className="pl-9"
             value={form.phone}
             onChange={(e) => onChange({ phone: e.target.value })}
             required

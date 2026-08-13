@@ -1,5 +1,7 @@
 "use client"
 
+import { brand, generateReference } from "@/lib/config"
+
 declare global {
   interface Window {
     PaystackPop: {
@@ -28,13 +30,13 @@ export interface PaystackConfig {
 const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!
 
 export function initPaystackPayment(config: PaystackConfig) {
-  const reference = `PSR-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+  const reference = generateReference()
 
   const handler = window.PaystackPop.setup({
     key: PAYSTACK_PUBLIC_KEY,
     email: config.email,
     amount: config.amount * 100,
-    currency: "NGN",
+    currency: brand.currencyCode,
     ref: reference,
     metadata: config.metadata,
     callback: (response) => {
@@ -49,7 +51,7 @@ export function initPaystackPayment(config: PaystackConfig) {
 }
 
 export function formatCurrency(amount: number): string {
-  return `₦${amount.toLocaleString()}`
+  return `${brand.currencySymbol}${amount.toLocaleString(brand.locale)}`
 }
 
 export function initPaystackPop(options: {
@@ -60,12 +62,12 @@ export function initPaystackPop(options: {
   callback?: (response: { reference: string; transaction?: string; status: string }) => void
   onClose?: () => void
 }) {
-  const handler = (window as any).PaystackPop?.setup({
+  const handler = (window as unknown as { PaystackPop?: { setup: (opts: unknown) => { openIframe: () => void } } }).PaystackPop?.setup({
     key: PAYSTACK_PUBLIC_KEY,
     email: options.email,
     amount: options.amount * 100,
-    currency: "NGN",
-    ref: options.reference || `PSR-${Date.now()}`,
+    currency: brand.currencyCode,
+    ref: options.reference || generateReference(),
     metadata: options.metadata,
     callback: options.callback,
     onClose: options.onClose,

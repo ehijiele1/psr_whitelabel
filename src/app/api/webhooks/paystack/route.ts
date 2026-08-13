@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/clientFactory'
+import { brand } from '@/lib/config'
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -13,7 +14,7 @@ interface ChargeData {
   reference: string
   amount: number
   paid_at: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   subscription_code?: string
 }
 
@@ -29,7 +30,7 @@ interface InvoiceData {
   subscription?: { subscription_code: string }
 }
 
-type EventHandler = (data: any) => Promise<NextResponse>
+type EventHandler = (data: Record<string, unknown>) => Promise<NextResponse>
 
 // ── Event Dispatcher Map ─────────────────────────────────────────────────
 
@@ -52,9 +53,10 @@ function verifyPaystackSignature(body: string, signature: string, secret: string
 
 // ── Event Handlers ───────────────────────────────────────────────────────
 
-async function handleChargeSuccess(data: ChargeData) {
+async function handleChargeSuccess(data: Record<string, unknown>) {
   const supabase = await createAdminClient()
-  const { reference, amount, paid_at, metadata } = data
+  const charge = data as unknown as ChargeData
+  const { reference, amount, paid_at, metadata } = charge
   const amountNaira = amount / 100
 
   // Idempotency: skip if already processed
@@ -68,14 +70,8 @@ async function handleChargeSuccess(data: ChargeData) {
   }
 
   // Subscription payment
-  if (data.subscription_code) {
-    await recordSubscriptionPayment(supabase, data, amountNaira)
-    return NextResponse.json({ received: true })
-  }
-
-  // Application payment
-  if (metadata?.is_application && metadata.applicant_id) {
-    await recordApplicationPayment(supabase, metadata.applicant_id, reference, amountNaira, paid_at)
+  if (charge.subscription_code) {
+    await recordSubscriptionPayment(supabase, charge, amountNaira)
     return NextResponse.json({ received: true })
   }
 
@@ -87,10 +83,11 @@ async function handleChargeSuccess(data: ChargeData) {
   return NextResponse.json({ received: true })
 }
 
-async function handleSubscriptionCreate(data: SubscriptionData) {
+async function handleSubscriptionCreate(data: Record<string, unknown>) {
   const supabase = await createAdminClient()
-  const subCode = data.subscription_code
-  const subscriptionId = data.metadata?.subscription_id
+  const sub = data as unknown as SubscriptionData
+  const subCode = sub.subscription_code
+  const subscriptionId = sub.metadata?.subscription_id
 
   if (subCode && subscriptionId) {
     await supabase
@@ -102,10 +99,11 @@ async function handleSubscriptionCreate(data: SubscriptionData) {
   return NextResponse.json({ received: true })
 }
 
-async function handleInvoiceUpdate(data: InvoiceData) {
+async function handleInvoiceUpdate(data: Record<string, unknown>) {
   const supabase = await createAdminClient()
-  const nextPaymentDate = data.next_payment_date?.split('T')[0]
-  const subCode = data.subscription?.subscription_code
+  const invoice = data as unknown as InvoiceData
+  const nextPaymentDate = invoice.next_payment_date?.split('T')[0]
+  const subCode = invoice.subscription?.subscription_code
 
   if (subCode && nextPaymentDate) {
     await supabase
@@ -119,7 +117,11 @@ async function handleInvoiceUpdate(data: InvoiceData) {
 
 // ── Database Operations ──────────────────────────────────────────────────
 
-async function recordSubscriptionPayment(supabase: any, data: any, amountNaira: number) {
+async function recordSubscriptionPayment(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  data: ChargeData,
+  amountNaira: number
+) {
   const subCode = data.subscription_code
   const paidAt = data.paid_at?.split('T')[0]
 
@@ -155,43 +157,13 @@ async function recordSubscriptionPayment(supabase: any, data: any, amountNaira: 
     icon: 'ti-refresh',
     color: '#DBEAFE',
     icon_color: '#2563EB',
-    text: `Subscription payment of ₦${amountNaira.toLocaleString('en-NG')} received from ${sub.tenants?.name || 'tenant'}`,
-  })
-}
-
-async function recordApplicationPayment(
-  supabase: any,
-  applicantId: string,
-  reference: string,
-  amountNaira: number,
-  paidAt: string
-) {
-  const { error } = await supabase
-    .from('applicants')
-    .update({
-      payment_status: 'paid',
-      payment_ref: reference,
-      payment_amount: amountNaira,
-      payment_date: paidAt.split('T')[0],
-      payment_method: 'paystack',
-      stage: 'payment-confirmed',
-    })
-    .eq('id', applicantId)
-
-  if (error) console.error('[Paystack] Applicant update failed:', error)
-
-  await supabase.from('inbox').insert({
-    type: 'proof',
-    from_name: 'Paystack System',
-    subject: `Application payment confirmed — ₦${amountNaira.toLocaleString('en-NG')}`,
-    preview: `Paystack reference: ${reference}. Applicant ID: ${applicantId}`,
-    read: false,
+    text: `Subscription payment of ${brand.currencySymbol}${amountNaira.toLocaleString(brand.locale)} received from ${sub.tenants?.name || 'tenant'}`,
   })
 }
 
 async function recordTenantPayment(
-  supabase: any,
-  metadata: Record<string, any>,
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  metadata: Record<string, unknown>,
   reference: string,
   amountNaira: number,
   paidAt: string
@@ -235,7 +207,7 @@ async function recordTenantPayment(
     icon: 'ti-credit-card',
     color: '#DCFCE7',
     icon_color: '#16A34A',
-    text: `Paystack payment of ₦${amountNaira.toLocaleString('en-NG')} received from ${tenant.name}`,
+    text: `Paystack payment of ${brand.currencySymbol}${amountNaira.toLocaleString(brand.locale)} received from ${tenant.name}`,
   })
 }
 

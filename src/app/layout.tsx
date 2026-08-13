@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/lib/theme";
+import { brand } from "@/lib/config";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
@@ -24,12 +25,15 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PrinceSteve Residence",
-  description: "Property management system for Nigerian landlords",
-  manifest: "/manifest.json",
+  title: {
+    default: brand.name,
+    template: `%s | ${brand.name}`,
+  },
+  description: brand.description,
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "PSR",
+    title: brand.shortName,
     statusBarStyle: "default",
   },
   icons: {
@@ -38,7 +42,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F172A",
+  themeColor: brand.themeColor,
   width: "device-width",
   initialScale: 1,
 };

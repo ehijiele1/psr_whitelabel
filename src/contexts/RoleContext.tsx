@@ -24,16 +24,12 @@ export function RoleProvider({ children, initialRole }: RoleProviderProps) {
   const [error, setError] = useState<string | null>(null)
 
   const fetchRole = async () => {
-    setIsLoading(true)
-    setError(null)
-
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         setRole(null)
-        setIsLoading(false)
         return
       }
 
@@ -59,10 +55,17 @@ export function RoleProvider({ children, initialRole }: RoleProviderProps) {
     }
   }
 
+  const refetch = async () => {
+    setIsLoading(true)
+    setError(null)
+    await fetchRole()
+  }
+
   // Fetch role on mount if not provided as initial prop
   useEffect(() => {
     if (!initialRole) {
-      fetchRole()
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void fetchRole()
     }
   }, [initialRole])
 
@@ -70,7 +73,7 @@ export function RoleProvider({ children, initialRole }: RoleProviderProps) {
     role,
     isLoading,
     error,
-    refetch: fetchRole,
+    refetch,
   }
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>

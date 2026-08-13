@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/browser"
+import { brand } from "@/lib/config"
 import { createInvitation } from "@/lib/supabase/invitations"
 import CsvImport from "@/components/tenants/csv-import"
 
@@ -287,7 +288,7 @@ export default function MigratePage() {
                 />
               </div>
               <div className="space-y-2 flex-1">
-                <Label className="text-xs">Amount (₦)</Label>
+                <Label className="text-xs">Amount ({brand.currencySymbol})</Label>
                 <Input
                   type="number"
                   placeholder="0"

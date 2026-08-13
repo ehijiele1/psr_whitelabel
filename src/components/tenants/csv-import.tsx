@@ -6,6 +6,7 @@ import { Upload, Download, AlertCircle, CheckCircle2, Loader2, FileSpreadsheet, 
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/browser"
 import { generateTenantsTemplate, generatePaymentsTemplate } from "@/lib/csv-template"
+import { brand } from "@/lib/config"
 import { toast } from "sonner"
 
 interface TenantRow {
@@ -504,7 +505,7 @@ export default function CsvImport() {
                     <td className="p-2">{row.property_name}</td>
                     <td className="p-2">{row.unit_name}</td>
                     <td className="p-2 capitalize">{row.unit_type}</td>
-                    <td className="p-2">₦{Number(row.current_rent).toLocaleString()}</td>
+                    <td className="p-2">{brand.currencySymbol}{Number(row.current_rent).toLocaleString()}</td>
                     <td className="p-2">
                       {row.errors.length > 0 ? (
                         <span className="inline-flex items-center gap-1 text-destructive" title={row.errors.join("; ")}>

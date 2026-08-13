@@ -10,10 +10,10 @@ interface PropertySelectionProps {
 }
 
 const properties = [
-  { value: "prince-steve-heights", label: "PrinceSteve Heights, VI" },
-  { value: "ikeja-plaza", label: "Ikeja Commercial Plaza" },
-  { value: "lekki-estate", label: "Lekki Phase 1 Estate" },
-  { value: "surulere-complex", label: "Surulere Shopping Complex" },
+  { value: "maple-heights", label: "Maple Heights Estate" },
+  { value: "oakwood-plaza", label: "Oakwood Commercial Plaza" },
+  { value: "cedar-park", label: "Cedar Park Residences" },
+  { value: "willow-complex", label: "Willow Shopping Complex" },
 ]
 
 const unitTypes = [

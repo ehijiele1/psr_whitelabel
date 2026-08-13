@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Save, Trash2 } from "lucide-react"
 import ThemeToggle from "@/components/ui/theme-toggle"
+import { brand } from "@/lib/config"
 
 interface OnboardingHeaderProps {
   onClearDraft: () => void
@@ -12,10 +13,10 @@ export default function OnboardingHeader({ onClearDraft }: OnboardingHeaderProps
   return (
     <div className="flex items-center gap-3 mb-8">
       <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold">
-        PS
+        {brand.shortName.charAt(0).toUpperCase()}
       </div>
       <div>
-        <h1 className="text-xl font-bold">PrinceSteve Residence</h1>
+        <h1 className="text-xl font-bold">{brand.name}</h1>
         <p className="text-xs text-muted-foreground">Tenant Application</p>
       </div>
       <Link

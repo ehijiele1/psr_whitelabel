@@ -24,7 +24,7 @@ export interface ClientOptions {
  * Default headers for service role clients
  */
 const SERVICE_ROLE_HEADERS = {
-  'x-client-info': 'princesteve-residence-server',
+  'x-client-info': 'estate-manager-server',
   'x-role': 'service-role',
 }
 

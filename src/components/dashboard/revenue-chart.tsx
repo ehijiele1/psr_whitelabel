@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
+import { brand } from "@/lib/config"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
 
 interface RevenueData {
@@ -28,7 +29,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
     <div className="rounded-lg border border-border/50 bg-background px-3 py-2 shadow-md text-xs">
       <p className="font-medium mb-1">{label}</p>
       <p className="text-primary font-semibold">
-        ₦{payload[0].value.toLocaleString()}
+        {brand.currencySymbol}{payload[0].value.toLocaleString()}
       </p>
     </div>
   )
@@ -58,7 +59,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 12 }}
-                    tickFormatter={(v: number) => `₦${(v / 1000).toFixed(0)}k`}
+                    tickFormatter={(v: number) => `${brand.currencySymbol}${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#1e3a5f", strokeDasharray: "3 3" }} />
                   <Line

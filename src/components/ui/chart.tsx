@@ -13,12 +13,6 @@ type ChartConfig = {
 
 const ChartContext = React.createContext<{ config: ChartConfig } | null>(null)
 
-function useChart() {
-  const ctx = React.useContext(ChartContext)
-  if (!ctx) throw new Error("useChart must be used within ChartContainer")
-  return ctx
-}
-
 const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { config: ChartConfig }

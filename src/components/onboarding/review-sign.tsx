@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { CheckCircle, PenLine } from "lucide-react"
 import { Label } from "@/components/ui/label"
+import { brand } from "@/lib/config"
 
 interface ReviewSignProps {
   data: {
@@ -33,10 +34,10 @@ interface ReviewSignProps {
 }
 
 const propertyLabels: Record<string, string> = {
-  "prince-steve-heights": "PrinceSteve Heights, VI",
-  "ikeja-plaza": "Ikeja Commercial Plaza",
-  "lekki-estate": "Lekki Phase 1 Estate",
-  "surulere-complex": "Surulere Shopping Complex",
+  "maple-heights": "Maple Heights Estate",
+  "oakwood-plaza": "Oakwood Commercial Plaza",
+  "cedar-park": "Cedar Park Residences",
+  "willow-complex": "Willow Shopping Complex",
 }
 
 const idTypeLabels: Record<string, string> = {
@@ -81,6 +82,7 @@ export default function ReviewSign({ data, onSignatureChange }: ReviewSignProps)
           <div className="flex gap-4 pl-6">
             {data.personalInfo.passportPhoto && (
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-muted flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={data.personalInfo.passportPhoto}
                   alt="Passport photo"
@@ -141,8 +143,8 @@ export default function ReviewSign({ data, onSignatureChange }: ReviewSignProps)
             <h3 className="font-medium text-sm">Agreement & Payment</h3>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm pl-6">
-            <div><span className="text-muted-foreground">Rent:</span> <span className="font-medium">₦{data.agreement.rentAmount ? formatAmount(data.agreement.rentAmount) : "TBD"}/yr</span></div>
-            <div><span className="text-muted-foreground">Deposit:</span> <span className="font-medium">₦{data.agreement.securityDeposit ? formatAmount(data.agreement.securityDeposit) : "TBD"}</span></div>
+            <div><span className="text-muted-foreground">Rent:</span> <span className="font-medium">{brand.currencySymbol}{data.agreement.rentAmount ? formatAmount(data.agreement.rentAmount) : "TBD"}/yr</span></div>
+            <div><span className="text-muted-foreground">Deposit:</span> <span className="font-medium">{brand.currencySymbol}{data.agreement.securityDeposit ? formatAmount(data.agreement.securityDeposit) : "TBD"}</span></div>
             <div><span className="text-muted-foreground">Term:</span> <span>{data.agreement.termDuration}</span></div>
             <div><span className="text-muted-foreground">Payment:</span> <span className="font-medium capitalize">{data.agreement.paymentMethod === "online" ? "Online (Paystack)" : data.agreement.paymentMethod === "offline" ? "Offline (Bank Transfer)" : "Not selected"}</span></div>
           </div>

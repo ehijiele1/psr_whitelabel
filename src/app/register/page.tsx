@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Building2, Mail, Lock, User, Phone, Eye, EyeOff } from "lucide-react"
@@ -13,7 +12,6 @@ import { createClient } from "@/lib/supabase/browser"
 import { toast } from "sonner"
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
@@ -33,7 +31,7 @@ export default function RegisterPage() {
     setLoading(true)
 
     const supabase = createClient()
-    const { data, error: authError } = await supabase.auth.signUp({
+    const { error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {

@@ -1,10 +1,14 @@
 import { describe, it, expect } from "vitest"
-import { csrfProtection } from "@/lib/csrf"
+import { csrfProtection, CSRF_COOKIE_NAME } from "@/lib/csrf"
 
 /**
- * Helper to build a NextRequest-like object with a given method and headers.
+ * Helper to build a NextRequest-like object with a given method, headers and cookie.
  */
-function makeRequest(method: string, headers: Record<string, string> = {}) {
+function makeRequest(
+  method: string,
+  headers: Record<string, string> = {},
+  cookieToken?: string
+) {
   const headerObj = new Map<string, string>()
   for (const [k, v] of Object.entries(headers)) headerObj.set(k.toLowerCase(), v)
   return {
@@ -12,6 +16,13 @@ function makeRequest(method: string, headers: Record<string, string> = {}) {
     headers: {
       get(name: string) {
         return headerObj.get(name.toLowerCase()) ?? null
+      },
+    },
+    cookies: {
+      get(name: string) {
+        return cookieToken !== undefined && name === CSRF_COOKIE_NAME
+          ? { value: cookieToken }
+          : undefined
       },
     },
   } as unknown as Parameters<typeof csrfProtection>[0]
@@ -37,27 +48,29 @@ describe("csrfProtection", () => {
   })
 
   it("rejects POST without CSRF token header", async () => {
-    const req = makeRequest("POST")
+    const req = makeRequest("POST", {}, "valid-cookie-token")
     const result = await csrfProtection(req)
     expect(result.valid).toBe(false)
     expect(result.error).toMatch(/missing/i)
   })
 
-  it("rejects POST with malformed CSRF token", async () => {
-    const req = makeRequest("POST", { "x-csrf-token": "not-a-real-token" })
+  it("rejects POST without CSRF cookie", async () => {
+    const req = makeRequest("POST", { "x-csrf-token": "abc123" })
     const result = await csrfProtection(req)
     expect(result.valid).toBe(false)
+    expect(result.error).toMatch(/missing/i)
   })
 
-  it("accepts either x-csrf-token or X-CSRF-Token header", async () => {
-    // Without a valid token, both headers should still fail validation
-    const req1 = makeRequest("POST", { "x-csrf-token": "garbage" })
-    const req2 = makeRequest("POST", { "X-CSRF-Token": "garbage" })
+  it("rejects POST with mismatched cookie and header", async () => {
+    const req = makeRequest("POST", { "x-csrf-token": "header-token" }, "cookie-token")
+    const result = await csrfProtection(req)
+    expect(result.valid).toBe(false)
+    expect(result.error).toMatch(/invalid/i)
+  })
 
-    const r1 = await csrfProtection(req1)
-    const r2 = await csrfProtection(req2)
-
-    expect(r1.valid).toBe(false)
-    expect(r2.valid).toBe(false)
+  it("accepts POST when cookie matches header", async () => {
+    const req = makeRequest("POST", { "X-CSRF-Token": "shared-token" }, "shared-token")
+    const result = await csrfProtection(req)
+    expect(result.valid).toBe(true)
   })
 })

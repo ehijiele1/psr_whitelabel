@@ -28,9 +28,11 @@ import {
 import { staggerContainer, staggerItem } from "@/lib/animations"
 import { createClient } from "@/lib/supabase/browser"
 import { createInvitation } from "@/lib/supabase/invitations"
+import { csrfFetch } from "@/lib/csrf-client"
 import { toast } from "sonner"
 import { useProperty } from "@/contexts/PropertyContext"
 import { useUserRole } from "@/contexts/RoleContext"
+import { brand } from "@/lib/config"
 
 const statusStyles: Record<string, { label: string; variant: "success" | "destructive" | "warning" | "secondary" }> = {
   active: { label: "Active", variant: "success" },
@@ -40,11 +42,52 @@ const statusStyles: Record<string, { label: string; variant: "success" | "destru
   terminated: { label: "Terminated", variant: "secondary" },
 }
 
-function formatCurrency(amount: number) {
-  return "₦" + amount.toLocaleString("en-US")
+interface TenantWithRelations {
+  id: string
+  user_id?: string | null
+  property_id?: string | null
+  unit_id?: string | null
+  name?: string | null
+  phone?: string | null
+  unit?: string | null
+  type?: string | null
+  rent?: number | null
+  lease_start?: string | null
+  lease_end?: string | null
+  notes?: string | null
+  status: string
+  created_at: string
+  profiles?: { full_name: string | null; email: string | null; phone: string | null } | null
+  units?: { name: string | null; monthly_rent: number | null; property_id: string | null } | null
+  properties?: { name: string | null } | null
 }
 
-function formatDate(dateStr: string) {
+interface UnitOption {
+  id: string
+  name: string
+  monthly_rent: number | null
+  type?: string | null
+  property_id?: string | null
+}
+
+interface PropertyOption {
+  id: string
+  name: string
+}
+
+interface SearchResult {
+  id: string
+  user_id?: string | null
+  full_name?: string | null
+  email?: string | null
+  phone?: string | null
+}
+
+function formatCurrency(amount: number) {
+  return brand.currencySymbol + amount.toLocaleString("en-US")
+}
+
+function formatDate(dateStr: string | null | undefined) {
   if (!dateStr) return ""
   const d = new Date(dateStr)
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
@@ -52,25 +95,24 @@ function formatDate(dateStr: string) {
 
 export default function TenantsPage() {
   const { activePropertyId, setActivePropertyId, properties } = useProperty()
-  const { role } = useUserRole()
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
 
-  const [tenants, setTenants] = useState<any[]>([])
+  const [tenants, setTenants] = useState<TenantWithRelations[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
 
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingTenant, setEditingTenant] = useState<any | null>(null)
+  const [dialogVersion, setDialogVersion] = useState(0)
+  const [editingTenant, setEditingTenant] = useState<TenantWithRelations | null>(null)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deletingTenant, setDeletingTenant] = useState<any | null>(null)
+  const [deletingTenant, setDeletingTenant] = useState<TenantWithRelations | null>(null)
 
   const fetchTenants = useCallback(async () => {
     if (!activePropertyId) return
-    setFetchError("")
     try {
       const { data, error } = await supabase
         .from("tenants")
@@ -80,6 +122,7 @@ export default function TenantsPage() {
       if (error) {
         setFetchError(error.message)
       } else if (data) {
+        setFetchError("")
         setTenants(data)
       }
     } catch (err) {
@@ -90,7 +133,8 @@ export default function TenantsPage() {
   }, [supabase, activePropertyId])
 
   useEffect(() => {
-    fetchTenants()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTenants()
   }, [fetchTenants])
 
   const filteredTenants = tenants.filter((t) => {
@@ -102,15 +146,17 @@ export default function TenantsPage() {
 
   function handleAdd() {
     setEditingTenant(null)
+    setDialogVersion((v) => v + 1)
     setDialogOpen(true)
   }
 
-  function handleEdit(tenant: any) {
+  function handleEdit(tenant: TenantWithRelations) {
     setEditingTenant(tenant)
+    setDialogVersion((v) => v + 1)
     setDialogOpen(true)
   }
 
-  function handleDeleteClick(tenant: any) {
+  function handleDeleteClick(tenant: TenantWithRelations) {
     setDeletingTenant(tenant)
     setDeleteDialogOpen(true)
   }
@@ -324,6 +370,7 @@ export default function TenantsPage() {
       </Card>
 
       <TenantDialog
+        key={dialogVersion}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         editingTenant={editingTenant}
@@ -348,7 +395,7 @@ function TenantDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  editingTenant: any | null
+  editingTenant: TenantWithRelations | null
   onSuccess: () => void
 }) {
   const supabase = useMemo(() => createClient(), [])
@@ -358,19 +405,19 @@ function TenantDialog({
   const [mode, setMode] = useState<"existing" | "new_user">("existing")
   const [createMethod, setCreateMethod] = useState<"password" | "invite">("password")
 
-  const [properties, setProperties] = useState<any[]>([])
-  const [selectedPropertyId, setSelectedPropertyId] = useState("")
-  const [availableUnits, setAvailableUnits] = useState<any[]>([])
-  const [selectedUnitId, setSelectedUnitId] = useState("")
-  const [rentAmount, setRentAmount] = useState("")
-  const [userQuery, setUserQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [selectedUserId, setSelectedUserId] = useState("")
-  const [selectedUserName, setSelectedUserName] = useState("")
-  const [selectedUserPhone, setSelectedUserPhone] = useState("")
-  const [tenancyStart, setTenancyStart] = useState("")
-  const [tenancyEnd, setTenancyEnd] = useState("")
-  const [notes, setNotes] = useState("")
+  const [properties, setProperties] = useState<PropertyOption[]>([])
+  const [selectedPropertyId, setSelectedPropertyId] = useState(editingTenant?.property_id || "")
+  const [availableUnits, setAvailableUnits] = useState<UnitOption[]>([])
+  const [selectedUnitId, setSelectedUnitId] = useState(editingTenant?.unit_id || "")
+  const [rentAmount, setRentAmount] = useState(editingTenant?.rent ? String(editingTenant.rent) : "")
+  const [userQuery, setUserQuery] = useState(editingTenant?.profiles?.full_name || editingTenant?.name || "")
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [selectedUserId, setSelectedUserId] = useState(editingTenant?.user_id || "")
+  const [selectedUserName, setSelectedUserName] = useState(editingTenant?.name || editingTenant?.profiles?.full_name || "")
+  const [selectedUserPhone, setSelectedUserPhone] = useState(editingTenant?.phone || editingTenant?.profiles?.phone || "")
+  const [tenancyStart, setTenancyStart] = useState(editingTenant?.lease_start?.split("T")[0] || "")
+  const [tenancyEnd, setTenancyEnd] = useState(editingTenant?.lease_end?.split("T")[0] || "")
+  const [notes, setNotes] = useState(editingTenant?.notes || "")
   const [submitting, setSubmitting] = useState(false)
 
   const [newFullName, setNewFullName] = useState("")
@@ -387,43 +434,17 @@ function TenantDialog({
       .then(({ data }) => { if (data) setProperties(data) })
 
     if (isEditing && editingTenant) {
-      setSelectedPropertyId(editingTenant.property_id || "")
-      setSelectedUnitId(editingTenant.unit_id || "")
-      setRentAmount(String(editingTenant.rent || ""))
-      setSelectedUserId(editingTenant.user_id || "")
-      setSelectedUserName(editingTenant.name || editingTenant.profiles?.full_name || "")
-      setSelectedUserPhone(editingTenant.phone || editingTenant.profiles?.phone || "")
-      setTenancyStart(editingTenant.lease_start?.split("T")[0] || "")
-      setTenancyEnd(editingTenant.lease_end?.split("T")[0] || "")
-      setNotes(editingTenant.notes || "")
-      setUserQuery(editingTenant.profiles?.full_name || editingTenant.name || "")
-    } else {
-      setMode("existing")
-      setCreateMethod("password")
-      setSelectedPropertyId("")
-      setSelectedUnitId("")
-      setRentAmount("")
-      setSelectedUserId("")
-      setSelectedUserName("")
-      setSelectedUserPhone("")
-      setTenancyStart("")
-      setTenancyEnd("")
-      setNotes("")
-      setUserQuery("")
-      setSearchResults([])
-      setNewFullName("")
-      setNewEmail("")
-      setNewPhone("")
-      setNewPassword("")
+      supabase
+        .from("units")
+        .select("id, name, monthly_rent, type")
+        .eq("property_id", editingTenant.property_id || "")
+        .order("name")
+        .then(({ data }) => { if (data) setAvailableUnits(data) })
     }
   }, [open, isEditing, editingTenant, supabase])
 
   useEffect(() => {
-    if (!selectedPropertyId) {
-      setAvailableUnits([])
-      setSelectedUnitId("")
-      return
-    }
+    if (!selectedPropertyId) return
     const query = supabase
       .from("units")
       .select("id, name, monthly_rent, type")
@@ -440,12 +461,14 @@ function TenantDialog({
   useEffect(() => {
     if (!selectedUnitId || isEditing) return
     const unit = availableUnits.find((u) => u.id === selectedUnitId)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (unit) setRentAmount(String(unit.monthly_rent))
   }, [selectedUnitId, availableUnits, isEditing])
 
   // Restrict profile search to landlords/caretakers only (RLS enforces this)
   useEffect(() => {
     if (!userQuery || userQuery.length < 2 || role === "tenant") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchResults([])
       return
     }
@@ -468,7 +491,7 @@ function TenantDialog({
     if (!isEditing && mode === "new_user") {
       if (createMethod === "password") {
         // Use admin API to create the user with proper is_admin_created flag
-        const res = await fetch("/api/staff/create", {
+        const res = await csrfFetch("/api/staff/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -611,7 +634,7 @@ function TenantDialog({
                             setSelectedUserId(profile.user_id || profile.id)
                             setSelectedUserName(profile.full_name || "")
                             setSelectedUserPhone(profile.phone || "")
-                            setUserQuery(profile.full_name || profile.email)
+                            setUserQuery(profile.full_name || profile.email || "")
                             setSearchResults([])
                           }}
                           className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${
@@ -726,7 +749,7 @@ function TenantDialog({
             >
               <option value="">{isEditing ? "Select unit" : "Select available unit"}</option>
               {availableUnits.map((u) => (
-                <option key={u.id} value={u.id}>{u.name} - ₦{u.monthly_rent?.toLocaleString("en-US")}</option>
+                <option key={u.id} value={u.id}>{u.name} - {brand.currencySymbol}{u.monthly_rent?.toLocaleString("en-US")}</option>
               ))}
             </select>
           </div>
@@ -790,7 +813,7 @@ function DeleteDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  tenant: any | null
+  tenant: TenantWithRelations | null
   onConfirm: () => void
 }) {
   return (

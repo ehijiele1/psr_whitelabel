@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/clientFactory';
-import { createPlan, listPlans } from '@/lib/paystack-server'
+import { createPlan } from '@/lib/paystack-server'
 import { requireRole } from '@/lib/auth/require-role';
 import { subscriptionPlanSchema, validateSchema } from '@/lib/schemas';
 import { csrfProtection } from '@/lib/csrf';

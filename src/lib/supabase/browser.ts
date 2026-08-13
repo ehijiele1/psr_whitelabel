@@ -11,7 +11,7 @@ export function createClient() {
       },
       global: {
         headers: {
-          "x-client-info": "princesteve-residence-web",
+          "x-client-info": "estate-manager-web",
         },
       },
     }

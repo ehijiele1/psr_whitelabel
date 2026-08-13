@@ -80,7 +80,8 @@ export default function PropertiesPage() {
   }, [supabase])
 
   useEffect(() => {
-    fetchProperties().then(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchProperties().then(() => setLoading(false))
   }, [fetchProperties])
 
   const handleOpenAdd = () => {
@@ -224,7 +225,7 @@ export default function PropertiesPage() {
                 <Label htmlFor="name">Property Name</Label>
                 <Input
                   id="name"
-                  placeholder="e.g. PrinceSteve Heights"
+                  placeholder="e.g. Maple Heights Estate"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
