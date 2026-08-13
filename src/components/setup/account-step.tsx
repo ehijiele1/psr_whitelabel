@@ -27,7 +27,9 @@ export default function AccountStep({ form, onChange }: AccountStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
+        <Label htmlFor="fullName">
+          Full Name <span className="text-destructive">*</span>
+        </Label>
         <div className="relative">
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -42,7 +44,9 @@ export default function AccountStep({ form, onChange }: AccountStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="email">
+          Email Address <span className="text-destructive">*</span>
+        </Label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -58,7 +62,9 @@ export default function AccountStep({ form, onChange }: AccountStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
+        <Label htmlFor="phone">
+          Phone Number <span className="text-destructive">*</span>
+        </Label>
         <div className="relative">
           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -72,18 +78,20 @@ export default function AccountStep({ form, onChange }: AccountStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">
+          Password <span className="text-destructive">*</span>
+        </Label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="password"
             type="password"
-            placeholder="At least 6 characters"
+            placeholder="At least 8 characters"
             className="pl-9"
             value={form.password}
             onChange={(e) => onChange({ password: e.target.value })}
             required
-            minLength={6}
+            minLength={8}
           />
         </div>
       </div>

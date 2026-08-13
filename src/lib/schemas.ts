@@ -219,19 +219,21 @@ export const setupSchema = z.object({
   }),
   unitGroups: z.array(
     z.object({
-      name: z.string().min(1, 'Unit group name is required'),
-      type: z.string().optional(),
+      type: z.enum(['apartment', 'shop', 'stall']).optional(),
+      label: z.string().optional(),
+      quantity: z.string().optional(),
+      defaultRent: z.string().optional(),
+      defaultDeposit: z.string().optional(),
       lawma: z.string().optional(),
       sanitation: z.string().optional(),
       units: z.array(
         z.object({
           name: z.string().min(1, 'Unit name is required'),
-          type: z.string().optional(),
           monthlyRent: z.string().optional(),
           deposit: z.string().optional(),
           luc: z.string().optional(),
         })
-      ).min(1, 'At least one unit is required'),
+      ).optional(),
     })
   ).optional(),
 });
@@ -266,10 +268,11 @@ export function validateSchema<T>(schema: z.ZodSchema<T>, data: unknown): { succ
   if (result.success) {
     return { success: true, data: result.data };
   } else {
-    // Format the first error message nicely
-    const error = result.error.errors[0];
-    const errorMessage = error.message || 'Validation failed';
-    return { success: false, error: errorMessage };
+    // Format the first error with its field path so users know which field failed
+    const issue = result.error.errors[0];
+    const fieldPath = issue.path.length > 0 ? issue.path.join('.') + ': ' : '';
+    const errorMessage = issue.message || 'Validation failed';
+    return { success: false, error: fieldPath + errorMessage };
   }
 }
 

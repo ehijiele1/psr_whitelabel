@@ -79,7 +79,7 @@ export default function SetupPage() {
   }
 
   const canProceed = () => {
-    if (step === 1) return account.fullName && account.email && account.phone && account.password.length >= 6
+    if (step === 1) return account.fullName && account.email && account.phone && account.password.length >= 8
     if (step === 2) return property.name && property.address && property.type
     if (step === 3) {
       const totalUnits = unitGroups.reduce((s, g) => s + g.units.length, 0)
@@ -175,6 +175,12 @@ export default function SetupPage() {
 
           {error && (
             <div className="mt-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+          )}
+
+          {!canProceed() && step < 3 && (
+            <p className="mt-4 text-xs text-muted-foreground text-center">
+              Fill in all required fields (marked with *) to continue.
+            </p>
           )}
 
           <div className="flex items-center justify-between mt-6 pt-4 border-t">

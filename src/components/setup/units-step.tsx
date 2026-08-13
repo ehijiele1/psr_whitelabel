@@ -146,17 +146,29 @@ export default function UnitsStep({ data, onChange }: UnitsStepProps) {
 
           {group.units.length > 0 && (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2 bg-muted/30 rounded-lg text-xs font-medium text-muted-foreground">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2 bg-muted/30 rounded-lg text-xs font-medium text-muted-foreground">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Default Monthly Rent ({brand.currencySymbol})
+                </Label>
+                <Input
+                  type="number"
+                  placeholder="Applied to all units below"
+                  className="h-8 text-sm"
+                  value={group.defaultRent}
+                  onChange={(e) => updateGroup(gi, { defaultRent: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2 bg-muted/30 rounded-lg text-xs font-medium text-muted-foreground">
                 <span>Unit Name</span>
-                <span>Monthly Rent ({brand.currencySymbol})</span>
-                <span>Deposit ({brand.currencySymbol})</span>
+                <span>Monthly Rent ({brand.currencySymbol}) *</span>
                 <span className="sm:hidden" />
               </div>
 
               {group.units.map((unit, ui) => (
                 <div
                   key={ui}
-                  className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-2 rounded-lg border bg-card relative"
+                  className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 rounded-lg border bg-card relative"
                 >
                   <div className="flex items-center gap-1">
                     <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -172,13 +184,6 @@ export default function UnitsStep({ data, onChange }: UnitsStepProps) {
                     className="h-9 text-sm"
                     value={unit.monthlyRent}
                     onChange={(e) => updateUnit(gi, ui, { monthlyRent: e.target.value })}
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Deposit"
-                    className="h-9 text-sm"
-                    value={unit.deposit}
-                    onChange={(e) => updateUnit(gi, ui, { deposit: e.target.value })}
                   />
                   <div className="flex items-center gap-1">
                     <button

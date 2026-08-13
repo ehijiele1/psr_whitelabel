@@ -35,7 +35,9 @@ export default function PropertyStep({ data, onChange }: PropertyStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="propName">Property Name</Label>
+        <Label htmlFor="propName">
+          Property Name <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="propName"
           placeholder="e.g. Maple Heights Estate"
@@ -46,7 +48,9 @@ export default function PropertyStep({ data, onChange }: PropertyStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="propAddress">Address</Label>
+        <Label htmlFor="propAddress">
+          Address <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="propAddress"
           placeholder="12 Example Avenue, Your City"
@@ -57,7 +61,9 @@ export default function PropertyStep({ data, onChange }: PropertyStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="propType">Property Type</Label>
+        <Label htmlFor="propType">
+          Property Type <span className="text-destructive">*</span>
+        </Label>
         <Select
           id="propType"
           value={data.type}

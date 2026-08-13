@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
     const chargeRows: Record<string, unknown>[] = []
 
     for (const group of unitGroups || []) {
-      for (const unit of group.units) {
+      for (const unit of group.units || []) {
         if (!unit.monthlyRent || parseFloat(unit.monthlyRent) <= 0) continue
 
         const unitId = crypto.randomUUID()
